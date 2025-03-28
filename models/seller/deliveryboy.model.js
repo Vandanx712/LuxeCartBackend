@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 
 
-const sellerSchema = new mongoose.Schema({
+const deliveryboySchema = new mongoose.Schema({
     name: {
         type: mongoose.Schema.Types.String,
         trim: true,
@@ -24,27 +24,24 @@ const sellerSchema = new mongoose.Schema({
     role: {
         type: mongoose.Schema.Types.String,
         enum: ['buyer', 'seller', 'deliveryboy'],
-        default: 'seller'
+        default: 'deliveryboy'
     },
-    shopname: {
+    vehicle_type: {
+        type: mongoose.Schema.Types.String,
+        enum: ['bike', 'tempo', 'van', 'truck'],
+    },
+    vehicle_number: {
         type: mongoose.Schema.Types.String,
         trim: true
     },
-    addresses: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Address'
+    is_ondelivery: {
+        type: mongoose.Schema.Types.Boolean,
+        default: false
     },
-    products: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Product"
-    }],
-    orders: [{ 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: "Order"
-     }], 
-
-}, { timestamps: true })
+    refreshToken: {
+        type: mongoose.Schema.Types.String
+    }
+})
 
 
-
-export const Seller = mongoose.model('Seller',sellerSchema)
+export const DeliveryBoy = mongoose.model('DeliveryBoy', deliveryboySchema)

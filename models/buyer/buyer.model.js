@@ -41,6 +41,9 @@ const buyerSchema = new mongoose.Schema({
     orders:{
         type:mongoose.Schema.Types.ObjectId,
         ref:'Order'
+    },
+    refreshToken:{
+        type:mongoose.Schema.Types.String
     }
 },{timestamps:true})
 
