@@ -1,15 +1,17 @@
 import { Seller } from "../models/seller/seller.model.js";
-import { ApiError } from "../utill/apierror";
+import { ApiError } from "../utill/apierror.js";
 import { asynchandller } from "../utill/asynchandller.js";
 import bcrypt from 'bcrypt'
 import { generateAccessToken, generateRefreshToken } from "./login.controller.js";
+import { DeliveryBoy } from "../models/seller/deliveryboy.model.js";
+import sendAccountDetailEmail from "../notification/sentAccountDetail.js";
 
 
 
 export const sellerRegister = asynchandller(async (req, res) => {
     const { name, email, phone, password, shopname } = req.body
 
-    if ([name, email, phone, password, shopname].some((field) => field.trim() === '')) {
+    if ([name, email, phone, password, shopname].some((field) => field === '')) {
         throw new ApiError(404, 'Plz fill all field')
     }
 
@@ -41,7 +43,7 @@ export const sellerRegister = asynchandller(async (req, res) => {
 export const login = asynchandller(async (req, res) => {
     const { email, password } = req.body
 
-    if ([email, password].some((field) => field.trim() === '')) {
+    if ([email, password].some((field) => field === '')) {
         throw new ApiError(404, 'Plz fill all field')
     }
 
@@ -67,5 +69,32 @@ export const login = asynchandller(async (req, res) => {
             message: 'Login successful',
             seller: SELLER
         })
+})
+
+
+export const createDeliveryBoy  = asynchandller(async(req,res)=>{
+    const { name, email, phone, password, vehicle_type, vehicle_number} = req.body 
+
+    if([name,email,phone,password,vehicle_number,vehicle_type].some((field)=>field ==='')) throw new ApiError(404,'Plz fill all field')
+
+    const existBoy = await DeliveryBoy.findOne({email}).select('name email phone')
+
+    if(existBoy) {
+        if(name == existBoy.name) throw new ApiError(404,'Username already exist')
+        if(email == existBoy.email) throw new ApiError(404,'User email already exist')
+        if(phone == existBoy.password) throw new ApiError(404,'User phone already exist') 
+    }
+
+    const newDeliveryBoy = await DeliveryBoy.create({
+        name:name.toLowerCase(),
+        email:email.toLowerCase(),
+        phone,
+        password:await bcrypt.hash(password,10),
+        createBy:req.user.id,
+        vehicle_type,
+        vehicle_number,
+    })
+
+    sendAccountDetailEmail(newDeliveryBoy)
 })
 

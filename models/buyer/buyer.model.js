@@ -11,9 +11,7 @@ const buyerSchema = new mongoose.Schema({
         trim:true
     },
     phone:{
-        type:mongoose.Schema.Types.Number,
-        min:10,
-        max:10
+        type:mongoose.Schema.Types.Number
     },
     password:{
         type:mongoose.Schema.Types.String,

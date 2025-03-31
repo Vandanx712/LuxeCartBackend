@@ -12,8 +12,6 @@ const deliveryboySchema = new mongoose.Schema({
     },
     phone: {
         type: mongoose.Schema.Types.Number,
-        min: 10,
-        max: 10
     },
     password: {
         type: mongoose.Schema.Types.String,
@@ -37,6 +35,10 @@ const deliveryboySchema = new mongoose.Schema({
     is_ondelivery: {
         type: mongoose.Schema.Types.Boolean,
         default: false
+    },
+    createBy:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:'Seller'
     },
     refreshToken: {
         type: mongoose.Schema.Types.String

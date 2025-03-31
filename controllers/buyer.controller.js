@@ -4,6 +4,7 @@ import {Buyer} from '../models/buyer/buyer.model.js'
 import bcrypt from 'bcrypt'
 import dotenv from 'dotenv'
 import sendWelcomeEmail from "../notification/sentWelcomeMail.js";
+import { Coin } from "../models/buyer/coin.model.js";
 
 
 dotenv.config()
@@ -14,7 +15,7 @@ dotenv.config()
 export const registerBuyer = asynchandller( async(req,res)=>{
     const {name , email , phone , password } = req.body
 
-    if([name,email,phone,password].some((field)=>field.trim()==='')){
+    if([name,email,phone,password].some((field)=>field ==='')){
         throw new ApiError(404,'Plz fill all field')
     }
 
@@ -37,9 +38,13 @@ export const registerBuyer = asynchandller( async(req,res)=>{
 
     sendWelcomeEmail(newBuyer)
 
+    await Coin.create({
+        buyer:newBuyer.id,
+        coincount:100
+    })
+
     return res.status(200).json({
         message:'Register successful',
         newBuyer:newBuyer
-    })
-    
+    })  
 })

@@ -12,8 +12,6 @@ const sellerSchema = new mongoose.Schema({
     },
     phone: {
         type: mongoose.Schema.Types.Number,
-        min: 10,
-        max: 10
     },
     password: {
         type: mongoose.Schema.Types.String,

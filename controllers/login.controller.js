@@ -34,37 +34,42 @@ export const generateRefreshToken = async(userId) =>{
 export const login = asynchandller(async(req,res)=>{
     const { email, password } = req.body
 
-    if([email,password].some((field)=>field.trim()==='')) {
+    if([email,password].some((field)=>field ==='')) {
         throw new ApiError(404,'Plz fill all field')
     }
 
     const [buyer,deliveryBoy] = await Promise.all([
-        Buyer.findOne({email:email}).select('name email role'),
-        DeliveryBoy.findOne({email:email}).select('name email role')
+        Buyer.findOne({email:email}).select('name email password role'),
+        DeliveryBoy.findOne({email:email}).select('name email password role')
     ])
 
     const user = buyer || deliveryBoy
 
     if(!user) throw new ApiError(404,'User not found')
 
-    const passwordvalid = await bcrypt.compare(password, user.password)
+    const passwordvalid = await bcrypt.compare(password, user.password )
     if(!passwordvalid) throw new ApiError(404,'Plz enter correct password')
 
-    const accessToken = generateAccessToken(user.id)
-    const refreshToken = generateRefreshToken(user.id)
+    const accessToken = await generateAccessToken(user.id)
+    const refreshToken = await generateRefreshToken(user.id)
     const options = {
         httpOnly: true,
         secure: true
     }
  
     if(buyer) {
-        const BUYER = Buyer.findByIdAndUpdate(buyer.id,{$set:{refreshToken:refreshToken}})
+        const updatedBuyer  = await Buyer.findByIdAndUpdate(buyer.id,{$set:{refreshToken:refreshToken}})
         return res.status(200)
         .cookie('accessToken',accessToken,options)
         .cookie('refreshToken',refreshToken,options)
         .json({
             message:'Login successful',
-            Buyer:BUYER
+            Buyer: {
+                name: updatedBuyer.name,
+                email: updatedBuyer.email,
+                role: updatedBuyer.role,
+                refreshToken:updatedBuyer.refreshToken
+            }, 
         })
     }
     else{
@@ -74,7 +79,12 @@ export const login = asynchandller(async(req,res)=>{
         .cookie('refreshToken',refreshToken,options)
         .json({
             message:'Login successful',
-            Deliveryboy:deliveryboy
+            Deliveryboy: {
+                name: deliveryboy.name,
+                email: deliveryboy.email,
+                role: deliveryboy.role,
+                refreshToken:deliveryboy.refreshToken
+            },
         })
     }
 })
