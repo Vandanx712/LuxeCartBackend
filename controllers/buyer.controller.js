@@ -77,44 +77,5 @@ export const updateBuyer = asynchandller(async (req, res) => {
     })
 })
 
-export const generateOtp = asynchandller(async (req, res, next) => {
-    const { email } = req.body
 
-    if (!email) throw new ApiError(400, 'Plz fill email field')
-
-    const findBuyer = await Buyer.findOne({ email })
-
-    if (!findBuyer) throw new ApiError(400, 'User not found')
-
-    req.User = findBuyer
-    console.log(req.User)
-
-    const otp = generateotp()
-
-    await Otp.create({
-        userid: findBuyer.id,
-        otp: otp,
-        expirein: new Date(Date.now() + 2 * 60 * 1000)
-    })
-
-    await sendVerifyPasswordOtpEmail(email, otp)
-
-    next()
-    return res.status(200).json({ message: 'Otp send on mail successfully' })
-})     /// resend otp ma pan aa api aavse 
-
-
-export const updatePassword = asynchandller(async(req,res)=>{
-    const {password} = req.body
-
-    if(!password) throw new ApiError(400,'Enter your new password')
-
-    const userId = req.User.id
-
-    await Buyer.findByIdAndUpdate(userId,{$set:{password:bcrypt.hash(password,10)}})
-
-    return res.status(200).json({
-        message:'Set new password successfully'
-    })
-})
 

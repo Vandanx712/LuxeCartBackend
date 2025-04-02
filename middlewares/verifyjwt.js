@@ -1,7 +1,7 @@
 import { Buyer } from "../models/buyer/buyer.model.js";
 import { DeliveryBoy } from "../models/seller/deliveryboy.model.js";
 import { Seller } from "../models/seller/seller.model.js";
-import { ApiError } from "../utill/apierror";
+import { ApiError } from "../utill/apierror.js";
 import { asynchandller } from "../utill/asynchandller.js";
 import jwt from 'jsonwebtoken'
 

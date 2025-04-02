@@ -4,7 +4,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 
-async function sendVerifyPasswordOtpEmail(email,otp) {
+async function sendVerifyPasswordOtpEmail(user,otp) {
     const transporter = nodemailer.createTransport({
         service: "Gmail",
         auth: { 
