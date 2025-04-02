@@ -5,9 +5,6 @@ import bcrypt from 'bcrypt'
 import dotenv from 'dotenv'
 import sendWelcomeEmail from "../notification/sentWelcomeMail.js";
 import { Coin } from "../models/buyer/coin.model.js";
-import { Otp } from "../models/otp.model.js";
-import { generateotp } from "../utill/generateotp.js";
-import sendVerifyPasswordOtpEmail from "../notification/sentVerifyPasswordOtp.js";
 
 
 dotenv.config()
@@ -76,6 +73,8 @@ export const updateBuyer = asynchandller(async (req, res) => {
         updatedBuyer: updatedBuyer
     })
 })
+
+
 
 
 

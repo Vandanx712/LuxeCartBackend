@@ -19,6 +19,9 @@ const deliveryboySchema = new mongoose.Schema({
         min: 6,
         max: 9
     },
+    profileImg: {
+        type: mongoose.Schema.Types.String
+    },
     role: {
         type: mongoose.Schema.Types.String,
         enum: ['buyer', 'seller', 'deliveryboy'],
@@ -36,9 +39,9 @@ const deliveryboySchema = new mongoose.Schema({
         type: mongoose.Schema.Types.Boolean,
         default: false
     },
-    createBy:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'Seller'
+    createBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Seller'
     },
     refreshToken: {
         type: mongoose.Schema.Types.String

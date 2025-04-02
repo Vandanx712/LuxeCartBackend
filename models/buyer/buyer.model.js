@@ -19,6 +19,9 @@ const buyerSchema = new mongoose.Schema({
         min:6,
         max:9
     },
+    profileImg:{
+        type:mongoose.Schema.Types.String
+    },
     role:{
         type:mongoose.Schema.Types.String,
         enum:['buyer','seller','deliveryboy'],
