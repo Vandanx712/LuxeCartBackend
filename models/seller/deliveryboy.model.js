@@ -2,9 +2,12 @@ import mongoose from "mongoose";
 
 
 const deliveryboySchema = new mongoose.Schema({
-    name: {
+    username: {
         type: mongoose.Schema.Types.String,
         trim: true,
+    },
+    name:{
+        type:mongoose.Schema.Types.String
     },
     email: {
         type: mongoose.Schema.Types.String,
@@ -16,8 +19,6 @@ const deliveryboySchema = new mongoose.Schema({
     password: {
         type: mongoose.Schema.Types.String,
         trim: true,
-        min: 6,
-        max: 9
     },
     profileImg: {
         type: mongoose.Schema.Types.String
@@ -42,9 +43,6 @@ const deliveryboySchema = new mongoose.Schema({
     createBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Seller'
-    },
-    refreshToken: {
-        type: mongoose.Schema.Types.String
     }
 })
 

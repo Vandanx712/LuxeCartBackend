@@ -2,6 +2,7 @@ import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import dotenv from 'dotenv'
 import fs from 'fs'
+import sharp from "sharp";
 
 
 dotenv.config()
@@ -19,22 +20,22 @@ const s3 = new S3Client({
 })
 
 
-export const uploadOnAws = async(filepath) =>{
+export const uploadProfilePic = async(user,filepath) =>{
 
     const filebuffer = await fs.promises.readFile(filepath.path)
-    const key = `productspic/${filepath.filename}`
+    const FileBuffer = await sharp(filebuffer).resize({height:100,width:100,fit:'contain'}).toBuffer()
+    const key = `userprofilepic/${filepath.filename}`
     const command = new PutObjectCommand({
         Bucket:bucketname,
         Key:key,
-        Body:filebuffer,
+        Body:FileBuffer,
         ContentType:filepath.mimetype
     })
     await s3.send(command)
     const getcommand = new GetObjectCommand({
         Bucket:bucketname,
-        Key:filepath.filename
+        Key:key,
     })
     const url = await getSignedUrl(s3,getcommand)
-    await fs.promises.unlink(filepath.path)
     return url
 }

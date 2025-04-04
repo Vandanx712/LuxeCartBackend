@@ -13,23 +13,24 @@ dotenv.config()
 
 
 export const registerBuyer = asynchandller(async (req, res) => {
-    const { name, email, phone, password } = req.body
+    const { username,name, email, phone, password } = req.body
 
-    if ([name, email, phone, password].some((field) => field === '')) {
+    if ([username,name, email, phone, password].some((field) => field === '')) {
         throw new ApiError(404, 'Plz fill all field')
     }
 
     const existbuyer = await Buyer.findOne({
-        $or: [{ email: email }, { phone: phone }, { name: name }]
+        $or: [{ email: email }, { phone: phone }, { username: username }]
     })
 
     if (existbuyer) {
-        if (name === existbuyer.name) throw new ApiError(404, 'Username is already exist')
+        if (username === existbuyer.username) throw new ApiError(404, 'Username is already exist')
         if (email === existbuyer.email) throw new ApiError(404, 'Email is already exist')
         if (phone === existbuyer.phone) throw new ApiError(404, 'Phone is already exist')
     }
 
     const newBuyer = await Buyer.create({
+        username:username.toLowerCase(),
         name: name,
         email: email.toLowerCase(),
         phone: phone,
@@ -51,28 +52,34 @@ export const registerBuyer = asynchandller(async (req, res) => {
 
 
 export const updateBuyer = asynchandller(async (req, res) => {
-    const { name, email, phone } = req.body
+    const { username,name, email, phone } = req.body
     const buyerId = req.user.id
 
-    if ([name, email, phone].some((field) => field === '')) throw new ApiError(400, 'Plz fill all field')
+    if ([username,name, email, phone].some((field) => field === '')) throw new ApiError(400, 'Plz fill all field')
 
     const existbuyer = await Buyer.findOne({
-        $or: [{ name }, { email }, { phone }]
+        $or: [{ username }, { email }, { phone }]
     })
 
     if (existbuyer) {
-        if (name === existbuyer.name) throw new ApiError(400, 'Username already exist')
+        if (username === existbuyer.username) throw new ApiError(400, 'Username already exist')
         if (email === existbuyer.email) throw new ApiError(400, 'Email already exist')
         if (phone === existbuyer.phone) throw new ApiError(400, 'PhoneNo already exist')
     }
 
-    const updatedBuyer = await Buyer.findByIdAndUpdate(buyerId, { $set: { name, email, phone } })
+    const updatedBuyer = await Buyer.findByIdAndUpdate(buyerId, { $set: { username,name, email, phone } })
 
     return res.status(200).json({
         message: 'Update buyer profile successfull',
         updatedBuyer: updatedBuyer
     })
 })
+
+
+
+
+
+
 
 
 

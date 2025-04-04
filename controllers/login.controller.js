@@ -5,7 +5,7 @@ import { asynchandller } from "../utill/asynchandller.js";
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
-import { findUserByEmail } from './finduserByemail.js';
+import { findUserByEmail } from './common.controller.js';
 
 dotenv.config()
 
@@ -61,7 +61,8 @@ export const login = asynchandller(async (req, res) => {
             user: {
                 name: user.name,
                 email: user.email,
-                role: user.role
+                role: user.role,
+                profileImg:user.profileImg
             }
         })
 })

@@ -8,6 +8,10 @@ const otpSchema = new mongoose.Schema({
     otp:{
         type:mongoose.Schema.Types.Number
     },
+    isverify:{
+        type:mongoose.Schema.Types.Boolean,
+        default:false
+    },
     expirein:{
         type:mongoose.Schema.Types.Date
     }

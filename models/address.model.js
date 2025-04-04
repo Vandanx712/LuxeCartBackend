@@ -20,9 +20,6 @@ const addressSchema = new mongoose.Schema(
         state: {
             type: mongoose.Schema.Types.String
         },
-        country: {
-            type: mongoose.Schema.Types.String
-        },
         zip_code: {
             type: mongoose.Schema.Types.String,
         },

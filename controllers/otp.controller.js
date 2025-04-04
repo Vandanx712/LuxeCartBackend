@@ -3,14 +3,12 @@ import sendVerifyPasswordOtpEmail from "../notification/sentVerifyPasswordOtp.js
 import { ApiError } from "../utill/apierror.js";
 import { asynchandller } from "../utill/asynchandller.js";
 import { generateotp } from "../utill/generateotp.js";
-import { findUserByEmail } from "./finduserByemail.js";
-import bcrypt from 'bcrypt'
+import { findUserByEmail } from "./common.controller.js";
 
 
 
 
-
-export const forgetPassword = asynchandller(async (req, res) => {
+export const sendotp = asynchandller(async (req, res) => {
     const { email } = req.body
     if (!email) throw new ApiError(409, 'Plz enter your email')
 
@@ -34,8 +32,8 @@ export const forgetPassword = asynchandller(async (req, res) => {
 })    /// resend otp mate aa use karvi 
 
 
-export const resetPassword = asynchandller(async (req, res) => {
-    const { email, otp, password } = req.body
+export const verifyotp = asynchandller(async (req, res) => {
+    const { email, otp } = req.body
     if (!otp) throw new ApiError(409, 'Plz enter otp')
 
     const user = await findUserByEmail(email)
@@ -49,12 +47,12 @@ export const resetPassword = asynchandller(async (req, res) => {
 
     if (otp !== findotp.otp) throw new ApiError(409, 'Plz enter correct otp')
 
-    user.password = await bcrypt.hash(password, 10)
-    await user.save()
-
-    await Otp.findByIdAndDelete(findotp.id)
+    findotp.isverify = true
+    await findotp.save()
 
     return res.status(200).json({
-        message: 'Reset password successfully'
+        message: 'Verifyotp successfully'
     })
 })
+
+

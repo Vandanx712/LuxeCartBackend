@@ -9,23 +9,24 @@ import sendAccountDetailEmail from "../notification/sentAccountDetail.js";
 
 
 export const sellerRegister = asynchandller(async (req, res) => {
-    const { name, email, phone, password, shopname } = req.body
+    const { username,name, email, phone, password, shopname } = req.body
 
-    if ([name, email, phone, password, shopname].some((field) => field === '')) {
+    if ([username,name, email, phone, password, shopname].some((field) => field === '')) {
         throw new ApiError(404, 'Plz fill all field')
     }
 
     const existseller = await Seller.findOne({
-        $or: [{ name: name }, { email: email }, { phone: phone }]
+        $or: [{ username: username }, { email: email }, { phone: phone }]
     })
 
     if (existseller) {
-        if (name === existseller.name) throw new ApiError(404, 'Name is already exist')
+        if (username === existseller.username) throw new ApiError(404, 'Name is already exist')
         if (email === existseller.email) throw new ApiError(404, 'Email is already exist')
         if (phone === existseller.phone) throw new ApiError(404, 'PhoneNO is already exist')
     }
 
     const newSeller = await Seller.create({
+        username:username.toLowerCase(),
         name: name,
         email: email.toLowerCase(),
         phone: phone,
@@ -61,32 +62,32 @@ export const login = asynchandller(async (req, res) => {
         secure: true
     }
 
-    const SELLER = Seller.findByIdAndUpdate(seller.id, { $set: { refreshToken: refreshToken } })
     return res.status(200)
         .cookie('accessToken', accessToken, options)
         .cookie('refreshToken', refreshToken, options)
         .json({
             message: 'Login successful',
-            seller: SELLER
+            seller: seller
         })
 })
 
 
 export const createDeliveryBoy  = asynchandller(async(req,res)=>{
-    const { name, email, phone, password, vehicle_type, vehicle_number} = req.body 
+    const { username, name,email, phone, password, vehicle_type, vehicle_number} = req.body 
 
-    if([name,email,phone,password,vehicle_number,vehicle_type].some((field)=>field ==='')) throw new ApiError(404,'Plz fill all field')
+    if([username,name,email,phone,password,vehicle_number,vehicle_type].some((field)=>field ==='')) throw new ApiError(404,'Plz fill all field')
 
     const existBoy = await DeliveryBoy.findOne({email}).select('name email phone')
 
     if(existBoy) {
-        if(name == existBoy.name) throw new ApiError(404,'Username already exist')
+        if(username == existBoy.username) throw new ApiError(404,'Username already exist')
         if(email == existBoy.email) throw new ApiError(404,'User email already exist')
         if(phone == existBoy.password) throw new ApiError(404,'User phone already exist') 
     }
 
     const newDeliveryBoy = await DeliveryBoy.create({
-        name:name.toLowerCase(),
+        username:username.toLowerCase(),
+        name:name,
         email:email.toLowerCase(),
         phone,
         password:await bcrypt.hash(password,10),
@@ -96,5 +97,9 @@ export const createDeliveryBoy  = asynchandller(async(req,res)=>{
     })
 
     sendAccountDetailEmail(newDeliveryBoy)
+
+    return res.status(200).json({
+        message:'Register DeliveryBoy successfully'
+    })
 })
 

@@ -5,7 +5,6 @@ const productSchema = new mongoose.Schema(
     {
         name: {
             type: mongoose.Schema.Types.String,
-            trim: true
         },
         description: {
             type: mongoose.Schema.Types.String,
@@ -41,7 +40,8 @@ const productSchema = new mongoose.Schema(
             ref:'Review'
         },
         images: {
-            type: mongoose.Schema.Types.Array
+            type: mongoose.Schema.Types.ObjectId,
+            ref:'Productimage'
         },
         attributes: [
             {
