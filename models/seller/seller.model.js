@@ -21,7 +21,8 @@ const sellerSchema = new mongoose.Schema({
         trim: true,
     },
     profileImg:{
-        type:mongoose.Schema.Types.String
+        key:{type:mongoose.Schema.Types.String},
+        url:{type:mongoose.Schema.Types.String}
     },
     role: {
         type: mongoose.Schema.Types.String,

@@ -20,8 +20,9 @@ const deliveryboySchema = new mongoose.Schema({
         type: mongoose.Schema.Types.String,
         trim: true,
     },
-    profileImg: {
-        type: mongoose.Schema.Types.String
+    profileImg:{
+        key:{type:mongoose.Schema.Types.String},
+        url:{type:mongoose.Schema.Types.String}
     },
     role: {
         type: mongoose.Schema.Types.String,

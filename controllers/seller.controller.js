@@ -41,7 +41,7 @@ export const sellerRegister = asynchandller(async (req, res) => {
 })
 
 
-export const login = asynchandller(async (req, res) => {
+export const sellerlogin = asynchandller(async (req, res) => {
     const { email, password } = req.body
 
     if ([email, password].some((field) => field === '')) {
@@ -55,8 +55,9 @@ export const login = asynchandller(async (req, res) => {
     const passwordvalid = await bcrypt.compare(password, seller.password)
     if (!passwordvalid) throw new ApiError(404, 'Plz enter correct password')
 
-    const accessToken = generateAccessToken(seller.id)
-    const refreshToken = generateRefreshToken(seller.id)
+    const accessToken = await generateAccessToken(seller)
+    const refreshToken = await generateRefreshToken(seller.id)
+
     const options = {
         httpOnly: true,
         secure: true
@@ -99,7 +100,28 @@ export const createDeliveryBoy  = asynchandller(async(req,res)=>{
     sendAccountDetailEmail(newDeliveryBoy)
 
     return res.status(200).json({
-        message:'Register DeliveryBoy successfully'
+        message:'Register DeliveryBoy successfully',
+        newDeliveryBoy
+    })
+})
+
+export const updateSeller = asynchandller(async(req,res)=>{
+    const { username, name , email , phone, shopname } = req.body
+    const sellerId = req.user.id
+
+    if([username,name,email,phone,shopname].some((field)=>field==='')) throw new ApiError(409,'Please fill all field')
+
+    const existSeller = await Seller.findOne({$or:[{email},{username},{phone}]}).select('username email phone')
+
+    if(existSeller){
+        if(username === existSeller.username) throw new ApiError(400,'Username already exist')
+        if(email === existSeller.email) throw new ApiError(400,'Email already exist')
+        if(phone === existSeller.phone) throw new ApiError(400,'PhoneNo already exist')
+    }
+
+    const updatedSeller = await Seller.findByIdAndUpdate(sellerId,{$set:{email,username,name,phone,shopname}})
+    return res.status(200).json({
+        message:'Seller profile update successfully'
     })
 })
 

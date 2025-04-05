@@ -7,7 +7,7 @@ const storage = multer.diskStorage({
     },filename:function(req,file,cb){
         const user = req.user
         const username = user.username
-        cb(null,`${user.role}_${username}`)
+        cb(null,`${user.role}_${username}_${file.originalname}`)
     }
 })
 

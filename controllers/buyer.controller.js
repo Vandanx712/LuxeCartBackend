@@ -70,11 +70,24 @@ export const updateBuyer = asynchandller(async (req, res) => {
     const updatedBuyer = await Buyer.findByIdAndUpdate(buyerId, { $set: { username,name, email, phone } })
 
     return res.status(200).json({
-        message: 'Update buyer profile successfull',
+        message: 'Buyer profile update successfully',
         updatedBuyer: updatedBuyer
     })
 })
 
+
+export const getBuyerbyId = asynchandller(async(req,res)=>{
+    const {buyerId} = req.params
+
+    if(!buyerId) throw new ApiError(409,'Something miss')
+
+    const buyer = await Buyer.findById(buyerId).select('-password')
+
+    return res.status(200).json({
+        message:'Fetch Buyer successfully',
+        buyer
+    })
+})
 
 
 

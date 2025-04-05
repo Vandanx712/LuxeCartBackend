@@ -10,10 +10,11 @@ import { findUserByEmail } from './common.controller.js';
 dotenv.config()
 
 
-export const generateAccessToken = async (userId) => {
+export const generateAccessToken = async (user) => {
     try {
         const accessToken = jwt.sign({
-            id: userId
+            id: user.id,
+            role:user.role
         }, process.env.ACCESS_TOKEN, { expiresIn: process.env.ACCESS_TOKEN_EXPIRE })
         return accessToken
     } catch (error) {
@@ -46,7 +47,7 @@ export const login = asynchandller(async (req, res) => {
     const passwordvalid = await bcrypt.compare(password, user.password)
     if (!passwordvalid) throw new ApiError(404, 'Plz enter correct password')
 
-    const accessToken = await generateAccessToken(user.id)
+    const accessToken = await generateAccessToken(user)
     const refreshToken = await generateRefreshToken(user.id)
     const options = {
         httpOnly: true,
@@ -59,6 +60,7 @@ export const login = asynchandller(async (req, res) => {
         .json({
             message:'Login successfully',
             user: {
+                username:user.username,
                 name: user.name,
                 email: user.email,
                 role: user.role,
