@@ -24,7 +24,7 @@ export const uploadProfilePic = async(filepath) =>{
 
     const file = await fs.promises.readFile(filepath.path)
     const FileBuffer = await sharp(file).resize({height:100,width:150,fit:'fill'}).toBuffer()
-    const imgkey = `userprofilepic/${filepath.filename}`
+    const imgkey = `userprofilepics/${filepath.filename}`
     const command = new PutObjectCommand({
         Bucket:bucketname,
         Key:imgkey,
