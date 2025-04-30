@@ -5,11 +5,11 @@ import bcrypt from 'bcrypt'
 import dotenv from 'dotenv'
 import sendWelcomeEmail from "../notification/sentWelcomeMail.js";
 import { Coin } from "../models/buyer/coin.model.js";
+import { findUserByEmail } from "./common.controller.js";
+import { Category } from "../models/admin/category.model.js";
 
 
 dotenv.config()
-
-
 
 
 export const registerBuyer = asynchandller(async (req, res) => {
@@ -23,11 +23,15 @@ export const registerBuyer = asynchandller(async (req, res) => {
         $or: [{ email: email }, { phone: phone }, { username: username }]
     })
 
+    const user = await findUserByEmail(email)
+
     if (existbuyer) {
         if (username === existbuyer.username) throw new ApiError(404, 'Username is already exist')
         if (email === existbuyer.email) throw new ApiError(404, 'Email is already exist')
         if (phone === existbuyer.phone) throw new ApiError(404, 'Phone is already exist')
     }
+
+    if(user) throw new ApiError(429,'Email already exist')
 
     const newBuyer = await Buyer.create({
         username:username.toLowerCase(),
@@ -55,17 +59,19 @@ export const updateBuyer = asynchandller(async (req, res) => {
     const { username,name, email, phone } = req.body
     const buyerId = req.user.id
 
-    if ([username,name, email, phone].some((field) => field === '')) throw new ApiError(400, 'Plz fill all field')
-
     const existbuyer = await Buyer.findOne({
         $or: [{ username }, { email }, { phone }]
     })
+
+    const user = await findUserByEmail(email)
 
     if (existbuyer) {
         if (username === existbuyer.username) throw new ApiError(400, 'Username already exist')
         if (email === existbuyer.email) throw new ApiError(400, 'Email already exist')
         if (phone === existbuyer.phone) throw new ApiError(400, 'PhoneNo already exist')
     }
+
+    if(user) throw new ApiError(429,'Email already exist')
 
     const updatedBuyer = await Buyer.findByIdAndUpdate(buyerId, { $set: { username,name, email, phone } })
 
@@ -82,6 +88,7 @@ export const getBuyerbyId = asynchandller(async(req,res)=>{
     if(!buyerId) throw new ApiError(409,'Something miss')
 
     const buyer = await Buyer.findById(buyerId).select('-password')
+    if(!buyer) throw new ApiError(404,'Buyer not found')
 
     return res.status(200).json({
         message:'Fetch Buyer successfully',
@@ -91,10 +98,35 @@ export const getBuyerbyId = asynchandller(async(req,res)=>{
 
 
 
+// category part 
 
+export const getCategoryById = asynchandller(async(req,res)=>{
+    const {categoryId} = req.params
+    const category = await Category.findById(categoryId)
+    if(!category) throw new ApiError(404,'Category not found')
 
+    return res.status(200).json({
+        message:'Fetch category successfully',
+        category
+    })
+})
 
+export const getallCategory = asynchandller(async(req,res)=>{
+    const categoies = await Category.find({is_subcategory:false,is_active:true})
+    return res.status(200).json({
+        message:'Fetch all categoies',
+        categoies
+    })
+})
 
+export const getSubcategoryByCategory = asynchandller(async(req,res)=>{
+    const {categoryId} = req.params
+    const category = await Category.findById(categoryId)
+    if(!category) throw new ApiError(404,'Category not found')
+    const subcategory = await Category.find({parent:categoryId})
 
-
-
+    return res.status(200).json({
+        message:'Fetch all subcategory of category',
+        subcategory
+    })
+})

@@ -7,17 +7,18 @@ const categorySchema = new mongoose.Schema(
             type: mongoose.Schema.Types.String,
             trim: true
         },
-        description: {
-            type: mongoose.Schema.Types.String
-        },
         parent: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "Category", default: null
-        }, // For subcategories
+            ref: "Category"
+        },
+        is_subcategory:{
+            type:mongoose.Schema.Types.Boolean,
+            default:false
+        },
         is_active: {
             type: mongoose.Schema.Types.Boolean,
             default: true
-        }, // Enable or disable category
+        },
     }
 );
 

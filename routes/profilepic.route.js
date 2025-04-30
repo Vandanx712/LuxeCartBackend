@@ -12,4 +12,4 @@ profilepicRouter.route('/update').post(verifyjwt,upload.single('avatar'),updateP
 profilepicRouter.route('/get').get(verifyjwt,getProfilePic)
 
 
-export default profilepicRouter
+export default profilepicRouter 

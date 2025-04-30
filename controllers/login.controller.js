@@ -1,6 +1,4 @@
-import { Buyer } from '../models/buyer/buyer.model.js'
 import { ApiError } from "../utill/apierror.js";
-import { DeliveryBoy } from '../models/seller/deliveryboy.model.js'
 import { asynchandller } from "../utill/asynchandller.js";
 import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
@@ -14,7 +12,7 @@ export const generateAccessToken = async (user) => {
     try {
         const accessToken = jwt.sign({
             id: user.id,
-            role:user.role
+            role: user.role
         }, process.env.ACCESS_TOKEN, { expiresIn: process.env.ACCESS_TOKEN_EXPIRE })
         return accessToken
     } catch (error) {
@@ -44,8 +42,10 @@ export const login = asynchandller(async (req, res) => {
 
     if (!user) throw new ApiError(404, 'User not found')
 
-    const passwordvalid = await bcrypt.compare(password, user.password)
-    if (!passwordvalid) throw new ApiError(404, 'Plz enter correct password')
+    if (user.role !== 'admin') {
+        const passwordvalid = await bcrypt.compare(password, user.password)
+        if (!passwordvalid) throw new ApiError(404, 'Plz enter correct password')
+    }
 
     const accessToken = await generateAccessToken(user)
     const refreshToken = await generateRefreshToken(user.id)
@@ -58,13 +58,13 @@ export const login = asynchandller(async (req, res) => {
         .cookie('accessToken', accessToken, options)
         .cookie('refreshToken', refreshToken, options)
         .json({
-            message:'Login successfully',
+            message: 'Login successfully',
             user: {
-                username:user.username,
-                name: user.name,
+                username: user.username,
+                name: user.name || null,
                 email: user.email,
                 role: user.role,
-                profileImg:user.profileImg
+                profileImg: user.profileImg || null
             }
         })
 })

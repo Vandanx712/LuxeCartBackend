@@ -26,7 +26,7 @@ const deliveryboySchema = new mongoose.Schema({
     },
     role: {
         type: mongoose.Schema.Types.String,
-        enum: ['buyer', 'seller', 'deliveryboy'],
+        enum: ['buyer', 'seller', 'deliveryboy','admin'],
         default: 'deliveryboy'
     },
     vehicle_type: {

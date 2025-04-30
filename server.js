@@ -4,13 +4,14 @@ import cookieparser from 'cookie-parser'
 import indexRoute from './routes/index.route.js'
 import { connectDB } from './db/db.js'
 import { handleError } from './utill/apierror.js'
+import defaultData from './db/default.js'
 
 
 dotenv.config()
 const port = process.env.PORT
 
 await connectDB()
-
+await defaultData()
 const app = express()
 
 app.use(express.json())
