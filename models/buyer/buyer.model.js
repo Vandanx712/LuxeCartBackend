@@ -29,10 +29,12 @@ const buyerSchema = new mongoose.Schema({
         enum: ['buyer', 'seller', 'deliveryboy','admin'],
         default:'buyer'
     },
-    addresses:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'Address'
-    },
+    addresses: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Address'
+        }
+    ],
     wishlist:{
         type:mongoose.Schema.Types.ObjectId,
         ref:'Wishlist'

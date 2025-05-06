@@ -18,3 +18,26 @@ export const getDeliveryboyById = asynchandller(async(req,res)=>{
         deliveryBoy
     })
 })
+
+export const updateBoyProfile = asynchandller(async(req,res)=>{
+    const {username, name, email, phone} = req.body
+    const boyId = req.user.id
+
+    const existBoy = await DeliveryBoy.findOne({$or:[{username,email,phone}]}).select('-password')
+    const user = await findUserByEmail(email)
+
+    if(existBoy){
+        if(existBoy.username === username ) throw new ApiError(400,'Username already exist')
+        if(existBoy.email === email) throw new ApiError(400,'Email already exist')
+        if(existBoy.phone === phone) throw new ApiError(400,'PhoneNO already exist')
+    }
+
+    if(user) throw new ApiError(400,'Email already exist')
+
+    const updatedBoy = await DeliveryBoy.findByIdAndUpdate(boyId,{username,name,email:email.toLowerCase(),phone},{new:true})
+
+    return res.status(200).json({
+        message:'Deliveryboy profile update successfully',
+        updatedBoy
+    })
+})

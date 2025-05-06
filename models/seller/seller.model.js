@@ -33,10 +33,12 @@ const sellerSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.String,
         trim: true
     },
-    addresses: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Address'
-    },
+    addresses: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Address'
+        }
+    ],
     products: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Product"

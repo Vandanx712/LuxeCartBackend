@@ -160,9 +160,33 @@ export const getAllDeliveryBoy = asynchandller(async(req,res)=>{
     if(user.role !== 'admin') throw new ApiError(400,'You are not authorized perform this operation.')
 
     const totalBoys = await DeliveryBoy.find({createBy:user.id})
+    const countboy = await DeliveryBoy.countDocuments({})
 
     return res.status(200).json({
         message:'Fetch all deliveryboys',
-        totalBoys
+        totalBoys,
+        countboy
+    })
+})
+
+export const getOndeliveryBoy = asynchandller(async(req,res)=>{
+    const deliveryboy = await DeliveryBoy.find({is_ondelivery:true})
+    const countboy = await DeliveryBoy.countDocuments({is_ondelivery:true})
+
+    return res.status(200).json({
+        message:"Fetch all is_ondelivery deliveryboy",
+        deliveryboy,
+        countboy
+    })
+})
+
+export const getFreedeliveryBoy = asynchandller(async(req,res)=>{
+    const deliveryboy = await DeliveryBoy.find({is_ondelivery:false})
+    const countboy = await DeliveryBoy.countDocuments({is_ondelivery:false})
+
+    return res.status(200).json({
+        message:"Fetch all free deliveryboy",
+        deliveryboy,
+        countboy
     })
 })

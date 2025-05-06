@@ -4,10 +4,6 @@ import mongoose from "mongoose";
 
 const productAttributeSchema = new mongoose.Schema(
     {
-      product: { 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: "Product"
-     },
       key: {
          type: mongoose.Schema.Types.String,
         }, // e.g., "Color", "RAM"

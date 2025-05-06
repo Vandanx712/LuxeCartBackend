@@ -3,6 +3,7 @@ import { ApiError } from "../utill/apierror.js";
 import { Category } from "../models/admin/category.model.js";
 import { findUserByEmail } from "./common.controller.js";
 import { Admin } from "../models/admin/admin.model.js";
+import { ProductAttribute } from "../models/product/productattribute.model.js";
 
 
 
@@ -27,15 +28,14 @@ export const updateAdmin = asynchandller(async(req,res)=>{
 // category part
 
 export const createCategory = asynchandller(async(req,res)=>{
-    const {name} = req.body
-    if(!name) throw new ApiError(429,'Plz enter category')
+    const {categories} = req.body
+    if(categories.length===0) throw new ApiError(429,'Plz enter category')
 
-    const category = await Category.create({
-        name
-    })
+    const Categories = await Promise.all(categories.map(async(category)=> Category.create({name:category})))
+
     return res.status(200).json({
         message:'Categoy create successfully',
-        category
+        Categories
     })
 })
 
@@ -46,7 +46,7 @@ export const updateCategory = asynchandller(async(req,res)=>{
     const category = await Category.findById(categoryId)
     if(!category) throw new ApiError(404,'Category not found')
 
-    const updatedCategory = await Category.updateOne(category.id,{name,parent:parent?parent:null,is_subcategory:parent?true:false})
+    const updatedCategory = await Category.updateOne({_id:category.id},{$set:{name,parent:parent?parent:null,is_subcategory:parent?true:false}})
 
     return res.status(200).json({
         message:"Category update successfully",
@@ -76,17 +76,55 @@ export const updateCategoryStatus = asynchandller(async(req,res)=>{
 
 
 export const createSubcategory = asynchandller(async(req,res)=>{
-    const {name,parent} = req.body 
-    if([name,parent].some((field)=>field=='')) throw new ApiError(429,'Plz fill all field')
+    const {parent,categories} = req.body 
 
-    const subcategory = await Category.create({
-        name,
-        parent,
-        is_subcategory:true
-    })
+    if(!parent) throw new ApiError(429,"Plz add parent category")
+    if(categories.length===0) throw new ApiError(429,"Plz enter category'")
+
+    const subcategories = await Promise.all(categories.map(async(name)=>Category.create({name,parent,is_subcategory:true})))
 
     return res.status(200).json({
         message:'SubCategory create successfully',
-        subcategory
+        subcategories
     })
 })
+
+
+// attribute part 
+
+
+export const addAttributes = asynchandller(async (req, res) => {
+    const { keys } = req.body
+    if (keys.length == 0) throw new ApiError(429, 'Plz enter the keys of attributes')
+
+    const keyArray = await Promise.all(keys.map(async (key) => ProductAttribute.create({ key })));
+
+    return res.status(200).json({
+        message: "Keys add successfully",
+        keyArray
+    })
+}) 
+
+export const updateAttribute = asynchandller(async(req,res)=>{
+    const {attributeId,key} = req.body
+    if([attributeId,key].some((field)=>field=='')) throw new ApiError(429,'Plz fill all field')
+
+    const updatedAttribute = await ProductAttribute.findByIdAndUpdate(attributeId,{key},{new:true})
+    if(!updatedAttribute) throw new ApiError(404,'Attribute not found')
+
+    return res.status(200).json({
+        message:"Attribute update successfully",
+        updatedAttribute
+    })
+})
+
+export const deleteAttribute = asynchandller(async(req,res)=>{
+    const {attributeId} = req.params
+    if(!attributeId) throw new ApiError(429,'Plz pass attributeId')
+
+    await ProductAttribute.findByIdAndDelete(attributeId)
+    return res.status(200).json({
+        message:"Delete attribute successfully"
+    })
+})
+

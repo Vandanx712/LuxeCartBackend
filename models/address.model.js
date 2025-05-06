@@ -5,11 +5,10 @@ const addressSchema = new mongoose.Schema(
     {
         user: {
             type: mongoose.Schema.Types.ObjectId,
-            refPath: "userType"
+            ref: "User"
         },
         userType: {
-            type: mongoose.Schema.Types.String,
-            enum: ["Buyer", "Seller"]
+            type: mongoose.Schema.Types.String
         },
         street: {
             type: mongoose.Schema.Types.String,

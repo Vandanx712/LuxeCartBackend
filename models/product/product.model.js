@@ -45,12 +45,6 @@ const productSchema = new mongoose.Schema(
                 url:{type:mongoose.Schema.Types.String}
             }
         ],
-        attributes: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "ProductAttribute"
-            }
-        ],
         variants: [
             { 
                 type: mongoose.Schema.Types.ObjectId, 
