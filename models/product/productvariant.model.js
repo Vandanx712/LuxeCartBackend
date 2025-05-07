@@ -3,10 +3,6 @@ import mongoose from "mongoose";
 
 const productVariantSchema = new mongoose.Schema(
     {
-        product: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "Product",
-        },
         variant_name: {
             type: mongoose.Schema.Types.String,
         }, // e.g., "128GB Black"
@@ -27,4 +23,4 @@ const productVariantSchema = new mongoose.Schema(
 );
 
 
-export const ProductVariant = mongoose.model('ProductVariant',productVariantSchema)
+export const ProductVariant = mongoose.model('ProductVariant', productVariantSchema)

@@ -24,6 +24,10 @@ export const updateAdmin = asynchandller(async(req,res)=>{
     })
 })
 
+export const getById = asynchandller(async(req,res)=>{
+    
+})
+
 
 // category part
 
