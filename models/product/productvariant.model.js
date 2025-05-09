@@ -11,7 +11,7 @@ const productVariantSchema = new mongoose.Schema(
         },
         stock_count: {
             type: mongoose.Schema.Types.Number,
-        },
+        }, 
         attributes: [
             {
                 type: mongoose.Schema.Types.ObjectId,

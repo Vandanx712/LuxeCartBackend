@@ -4,7 +4,8 @@ import { Category } from "../models/admin/category.model.js";
 import { findUserByEmail } from "./common.controller.js";
 import { Admin } from "../models/admin/admin.model.js";
 import { ProductAttribute } from "../models/product/productattribute.model.js";
-
+import fs from 'fs/promises'
+import path from "path";
 
 
 export const updateAdmin = asynchandller(async(req,res)=>{
@@ -25,7 +26,16 @@ export const updateAdmin = asynchandller(async(req,res)=>{
 })
 
 export const getById = asynchandller(async(req,res)=>{
-    
+    const {adminId} = req.params
+    if(!adminId) throw new ApiError(429,'Plz pass admin id')
+
+    const admin = await Admin.findById(adminId)
+    if(!admin) throw new ApiError(404,"Admin not found for given id")
+
+    return res.status(200).json({
+        message:'Fetch admin by id successfully',
+        admin
+    })
 })
 
 
@@ -59,22 +69,22 @@ export const updateCategory = asynchandller(async(req,res)=>{
 })
 
 
-export const updateCategoryStatus = asynchandller(async(req,res)=>{
-    const {categoryIds} = req.body
-    
-    const categorys = await Category.find({_id:{$in:categoryIds}})
-    if(categorys.some((category)=>!category)) throw new ApiError(404,'Category not found')
+export const updateCategoryStatus = asynchandller(async (req, res) => {
+    const { categoryIds } = req.body
 
-    for(let category of categorys){
-        if(category.is_active==true){
-        await Category.updateOne({_id:category.id},{$set:{is_active:false}})
+    const categorys = await Category.find({ _id: { $in: categoryIds } })
+    if (categorys.some((category) => !category)) throw new ApiError(404, 'Category not found')
+
+    for (let category of categorys) {
+        if (category.is_active == true) {
+            await Category.updateOne({ _id: category.id }, { $set: { is_active: false } })
         }
-        else{
-            await Category.updateOne({_id:category.id},{$set:{is_active:true}})
+        else {
+            await Category.updateOne({ _id: category.id }, { $set: { is_active: true } })
         }
     }
     return res.status(200).json({
-        message:"Categories status change successfully",
+        message: "Categories status change successfully",
     })
 }) // aa subcategory mate chhe kem k subcategory nu status change thase 
 
@@ -98,22 +108,36 @@ export const createSubcategory = asynchandller(async(req,res)=>{
 
 
 export const addAttributes = asynchandller(async (req, res) => {
-    const { keys } = req.body
-    if (keys.length == 0) throw new ApiError(429, 'Plz enter the keys of attributes')
+    const { key,value } = req.body
+    if ([key,value].some((field)=>field=='')) throw new ApiError(429, 'Plz fill all fields')
 
-    const keyArray = await Promise.all(keys.map(async (key) => ProductAttribute.create({ key })));
+    const Value = value.map((v)=>v.toLowerCase())
+    const keys = await ProductAttribute.create({
+        key,
+        value:Value
+    }) 
+
+    const filepath = `uploads/admin`
+    try {
+        await fs.access(filepath); // Check if directory exists
+    } catch (error) {
+        await fs.mkdir(filepath, { recursive: true }); // Create directory if not exists
+    }
+    const file = path.join(filepath,'adminAttribute.txt')
+    await fs.writeFile(file,keys.id.toString())
 
     return res.status(200).json({
         message: "Keys add successfully",
-        keyArray
+        keys
     })
 }) 
 
 export const updateAttribute = asynchandller(async(req,res)=>{
-    const {attributeId,key} = req.body
-    if([attributeId,key].some((field)=>field=='')) throw new ApiError(429,'Plz fill all field')
+    const {attributeId,key,value} = req.body
+    if([attributeId,key,value].some((field)=>field=='')) throw new ApiError(429,'Plz fill all field')
 
-    const updatedAttribute = await ProductAttribute.findByIdAndUpdate(attributeId,{key},{new:true})
+    const Value = value.map((v)=>v.toLowerCase())
+    const updatedAttribute = await ProductAttribute.findByIdAndUpdate(attributeId,{key,value:Value},{new:true})
     if(!updatedAttribute) throw new ApiError(404,'Attribute not found')
 
     return res.status(200).json({
@@ -122,13 +146,16 @@ export const updateAttribute = asynchandller(async(req,res)=>{
     })
 })
 
-export const deleteAttribute = asynchandller(async(req,res)=>{
-    const {attributeId} = req.params
-    if(!attributeId) throw new ApiError(429,'Plz pass attributeId')
+export const deleteAttribute = asynchandller(async (req, res) => {
+    const { attributeId } = req.params
+    if (!attributeId) throw new ApiError(429, 'Plz pass attributeId')
 
     await ProductAttribute.findByIdAndDelete(attributeId)
+    const filepath = `uploads/admin`
+    const file = path.join(filepath, 'adminAttribute.txt')
+    await fs.unlink(file)
+
     return res.status(200).json({
-        message:"Delete attribute successfully"
+        message: "Delete attribute successfully"
     })
 })
-

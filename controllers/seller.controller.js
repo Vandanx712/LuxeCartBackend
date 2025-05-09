@@ -6,6 +6,10 @@ import { generateAccessToken, generateRefreshToken } from "./login.controller.js
 import { DeliveryBoy } from "../models/seller/deliveryboy.model.js";
 import sendAccountDetailEmail from "../notification/sentAccountDetail.js";
 import { findUserByEmail } from "./common.controller.js";
+import { ProductAttribute } from "../models/product/productattribute.model.js";
+import { ProductVariant } from "../models/product/productvariant.model.js";
+import fs from 'fs/promises'
+import path from "path";
 
 
 
@@ -94,7 +98,8 @@ export const updateSeller = asynchandller(async (req, res) => {
 
     if (user) throw new ApiError(429, 'Email already exist')
 
-    const updatedSeller = await Seller.findByIdAndUpdate(sellerId, { $set: { email, username, name, phone, shopname } })
+    const updatedSeller = await Seller.findByIdAndUpdate(sellerId, { $set: { email, username, name, phone, shopname } },{new:true})
+    if(!updatedSeller) throw new ApiError(404,'Seller not found')
     return res.status(200).json({
         message: 'Seller profile update successfully',
         updatedSeller
@@ -192,5 +197,108 @@ export const getFreedeliveryBoy = asynchandller(async(req,res)=>{
         message:"Fetch all free deliveryboy",
         deliveryboy,
         countboy
+    })
+})
+
+/// product upload part ///
+
+// productattribute and productvariant part :--
+
+export const addAttributeValue = asynchandller(async(req,res)=>{
+    const {key,value} = req.body
+
+    if((key && !value) || (value && !key)) throw new ApiError(429,'Plz fill all fields') 
+
+    const filepath = `uploads/admin`
+    const file = path.join(filepath,'adminAttribute.txt')
+    const filecontent = await fs.readFile(file,'utf-8')
+    const adminAttribute = await ProductAttribute.findById(filecontent)
+    if(!adminAttribute.value.includes(key.toLowerCase())) throw new ApiError(400,'Plz enter valid key')
+
+    const attribute = await ProductAttribute.create({
+        key,
+        value
+    })
+    return res.status(200).json({
+        message:'Attribute value add successfully',
+        attribute
+    })
+}) // may be update attribute value ma aaj api use thase 
+
+export const updateAttribute = asynchandller(async(req,res)=>{
+    const {attributeId,key,value} = req.body
+
+    if((key && !value) || (value && !key)) throw new ApiError(429,'Plz fill all fields') 
+
+    const filepath = `uploads/admin`
+    const file = path.join(filepath,'adminAttribute.txt')
+    const filecontent = await fs.readFile(file,'utf-8')
+    const adminAttribute = await ProductAttribute.findById(filecontent)
+    if(!adminAttribute.value.includes(key.toLowerCase())) throw new ApiError(400,'Plz enter valid key') 
+
+    const updatedAttribute = await ProductAttribute.findByIdAndUpdate(attributeId,{key,value},{new:true})
+    if(!updatedAttribute) throw new ApiError(400,'Attribute not found for given id')
+
+    return res.status(200).json({
+        message:'Update your attribute successfully',
+        updatedAttribute
+    })
+})
+
+export const deleteAttribute = asynchandller(async(req,res)=>{
+    const {attributeId} = req.params 
+    if(!attributeId) throw new ApiError(429,'Plz pass attribute id')
+
+    const attribute = await ProductAttribute.findById(attributeId)
+    if(!attribute) throw new ApiError(404,'Productattribute not found for given id')
+    await ProductAttribute.deleteOne({id:attributeId})
+
+    return res.status(200).json({
+        message:'Attribute delete successfully'
+    })
+})
+
+
+
+export const addProductVariant  = asynchandller(async(req,res)=>{
+    const {variantName,price,stock,attributes} = req.body 
+
+    if([variantName,price,stock,attributes].some((field)=>field=='')) throw new ApiError(429,'Plz fill all fields')
+    const productvariant = await ProductVariant.create({
+        variant_name:variantName,
+        price,
+        stock_count:stock,
+        attributes
+    })
+
+    return res.status(200).json({
+        message:'ProductVariant set successfully',
+        productvariant
+    })
+})
+
+export const updateVariant = asynchandller(async(req,res)=>{
+    const {variantId,variantName,price,stock,attributes} = req.body
+    
+    const updatedVariant = await ProductVariant.findByIdAndUpdate(variantId,{variant_name:variantName,price,stock_count:stock,attributes},{new:true})
+    if(updatedVariant) throw new ApiError(404,'Productvariant not found for given id')
+
+    return res.status(200).json({
+        message:'Productvariant update successfully',
+        updatedVariant
+    })
+})
+
+export const deleteVariant =  asynchandller (async(req,res)=>{
+    const {variantId} = req.params
+    if(!variantId) throw new ApiError(429,'Plz pass variant id')
+
+    const variant = await ProductVariant.findById(variantId)
+    if(!variant) throw new ApiError(404,'Productvariant not found for given id')
+
+    await ProductVariant.deleteOne({id:variantId})
+
+    return res.status(200).json({
+        message:"Productvariant delete successfully"
     })
 })

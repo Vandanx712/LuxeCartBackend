@@ -2,6 +2,7 @@ import { Category } from "../models/admin/category.model.js"
 import { ApiError } from "../utill/apierror.js"
 import { asynchandller } from "../utill/asynchandller.js"
 import {ProductAttribute} from '../models/product/productattribute.model.js'
+import { ProductVariant } from "../models/product/productvariant.model.js"
 
 
 
@@ -42,23 +43,28 @@ export const getSubcategoryByCategory = asynchandller(async(req,res)=>{
 
 // attribute part  
 
-export const getallAttributes = asynchandller(async(req,res)=>{
-    const Attributes = await ProductAttribute.find({})
+export const attributegetById = asynchandller(async(req,res)=>{
+    const {attributeId} = req.params
+    if(!attributeId) throw new ApiError(429,'Plz pass attribute id')
+
+    const attribute = await ProductAttribute.findById(attributeId)
+    if(!attribute) throw new ApiError(404,'Attribute not found for given id')
+
     return res.status(200).json({
-        message:'Fetch all attributes',
-        Attributes
+        message:"Fetch attribute detail by id successfully",
+        attribute
     })
 })
 
-export const addAttributeValue = asynchandller(async(req,res)=>{
-    const {attributeId,value} = req.body
-    if([attributeId,value].some((field)=>field=='')) throw new ApiError(429,'Plz fill all field')
+export const variantgetById = asynchandller(async(req,res)=>{
+    const {variantId} = req.params
+    if(!variantId) throw new ApiError(429,"Plz pass variant id")
     
-    const attribute = await ProductAttribute.findByIdAndUpdate(attributeId,{$set:{value}},{new:true})
-    if(!attribute) throw new ApiError(404,'Attribute not found')
+    const variant = await ProductVariant.findById(variantId)
+    if(!variant) throw new ApiError(404,"Productvariant not found for given id")
 
     return res.status(200).json({
-        message:"Add value successfully",
-        attribute
+        message:'Fetch productvariant by id',
+        variant
     })
-}) // seller jyare product create tyare use thase
+})
