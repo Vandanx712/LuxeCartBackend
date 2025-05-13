@@ -9,9 +9,17 @@ const productVariantSchema = new mongoose.Schema(
         price: {
             type: mongoose.Schema.Types.Number,
         },
+        discount_price: {
+            type: mongoose.Schema.Types.Number,
+            default: null
+        },
         stock_count: {
             type: mongoose.Schema.Types.Number,
-        }, 
+        },
+        is_default_Variant: {
+            type: mongoose.Schema.Types.Boolean,
+            default: false
+        },
         attributes: [
             {
                 type: mongoose.Schema.Types.ObjectId,

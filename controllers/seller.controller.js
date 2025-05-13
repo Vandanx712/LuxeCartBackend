@@ -10,6 +10,7 @@ import { ProductAttribute } from "../models/product/productattribute.model.js";
 import { ProductVariant } from "../models/product/productvariant.model.js";
 import fs from 'fs/promises'
 import path from "path";
+import { Product } from "../models/product/product.model.js";
 
 
 
@@ -202,103 +203,178 @@ export const getFreedeliveryBoy = asynchandller(async(req,res)=>{
 
 /// product upload part ///
 
+export const uploadProduct = asynchandller(async (req, res) => {
+    const { name, description, discount, category, subcategory, brand, variants } = req.body
+    if([name,description,category,subcategory].some((field)=>field=='')) throw new ApiError(429,'Plz fill all field')
+
+    const parsedVariants = variants || JSON.parse(variants)  // from multipart form
+
+    let variantIds = []
+    const filepath = `uploads/admin`
+    const file = path.join(filepath, 'adminAttribute.txt')
+    const filecontent = await fs.readFile(file, 'utf-8')
+    const adminAttribute = await ProductAttribute.findById(filecontent)
+
+    for(let variant of parsedVariants){
+        let attributeIds = []
+        for (let attribute of variant.attributes) {
+            if (!adminAttribute.value.includes(attribute.key.toLowerCase())) throw new ApiError(400, 'Plz enter valid key')
+            const attributeDoc = new ProductAttribute({
+                key:attribute.key,
+                value:attribute.value
+            })
+            await attributeDoc.save()
+            attributeIds.push(attributeDoc.id)
+        }
+        const Variantprice = variant.price
+        const discountprice = Variantprice - ((Variantprice * discount)/100)
+        const variantDoc = new ProductVariant({
+            variant_name:variant.name,
+            price:Variantprice,
+            discount_price:discountprice,
+            stock_count:variant.stock,
+            is_default_Variant:variant.defaultVariant,
+            attributes:attributeIds
+        })
+        await variantDoc.save()
+        variantIds.push(variantDoc.id)
+    }
+
+    const productvariants= await Promise.all(variantIds.map(async(variId)=>ProductVariant.findById(variId)))
+    const defaultVariant = productvariants.filter((vari)=>vari.is_default_Variant==true)
+
+    const product = await Product.create({
+        name,
+        description,
+        price:defaultVariant[0].price,
+        discount,
+        discount_price:defaultVariant[0].discount_price,
+        category,
+        subcategory,
+        seller:req.user.id,
+        brand,
+        stock_count:defaultVariant.stock_count,
+        variants:variantIds
+    })
+
+    return res.status(200).json({
+        message:'Product upload successfully',
+        product
+    })
+})
+
+export const productUpdate = asynchandller(async(req,res)=>{
+    const {productId,name,description,brand,category,subcategory,discount,} = req.body
+    const sellerId = req.user.id
+
+    const product = await Product.findOneAndReplace({id:productId,seller:sellerId},{$set:{name,description,brand,category,subcategory,discount}},{new:true})
+    if(!product) throw new ApiError(404,"Product not found")
+        
+    return res.status(200).json({
+        message:'Product update successfully',
+        product
+    })
+})
 // productattribute and productvariant part :--
 
-export const addAttributeValue = asynchandller(async(req,res)=>{
-    const {key,value} = req.body
 
-    if((key && !value) || (value && !key)) throw new ApiError(429,'Plz fill all fields') 
+export const updateAttribute = asynchandller(async (req, res) => {
+    const { attributeId, key, value } = req.body
+    const sellerId = req.user._id
 
-    const filepath = `uploads/admin`
-    const file = path.join(filepath,'adminAttribute.txt')
-    const filecontent = await fs.readFile(file,'utf-8')
-    const adminAttribute = await ProductAttribute.findById(filecontent)
-    if(!adminAttribute.value.includes(key.toLowerCase())) throw new ApiError(400,'Plz enter valid key')
+    const variant = await ProductVariant.findOne({
+        attributes: attributeId,
+    });
 
-    const attribute = await ProductAttribute.create({
-        key,
-        value
-    })
-    return res.status(200).json({
-        message:'Attribute value add successfully',
-        attribute
-    })
-}) // may be update attribute value ma aaj api use thase 
-
-export const updateAttribute = asynchandller(async(req,res)=>{
-    const {attributeId,key,value} = req.body
-
-    if((key && !value) || (value && !key)) throw new ApiError(429,'Plz fill all fields') 
+    const product = await Product.findOne({
+        variants: variant?._id,
+        seller: sellerId,
+    });
+    if (!product) return res.status(403).json({ message: "Unauthorized" });
 
     const filepath = `uploads/admin`
-    const file = path.join(filepath,'adminAttribute.txt')
-    const filecontent = await fs.readFile(file,'utf-8')
+    const file = path.join(filepath, 'adminAttribute.txt')
+    const filecontent = await fs.readFile(file, 'utf-8')
     const adminAttribute = await ProductAttribute.findById(filecontent)
-    if(!adminAttribute.value.includes(key.toLowerCase())) throw new ApiError(400,'Plz enter valid key') 
+    if (!adminAttribute.value.includes(key.toLowerCase())) throw new ApiError(400, 'Plz enter valid key')
 
-    const updatedAttribute = await ProductAttribute.findByIdAndUpdate(attributeId,{key,value},{new:true})
-    if(!updatedAttribute) throw new ApiError(400,'Attribute not found for given id')
+    const updatedAttribute = await ProductAttribute.findById(attributeId);
+    if (!updatedAttribute) return res.status(404).json({ message: "Attribute not found" });
 
+    updatedAttribute.key = key ?? updatedAttribute.key;
+    updatedAttribute.value = value ?? updatedAttribute.value;
+
+    await updatedAttribute.save();
     return res.status(200).json({
-        message:'Update your attribute successfully',
+        message: 'Update your attribute successfully',
         updatedAttribute
     })
 })
 
-export const deleteAttribute = asynchandller(async(req,res)=>{
-    const {attributeId} = req.params 
-    if(!attributeId) throw new ApiError(429,'Plz pass attribute id')
+export const deleteAttribute = asynchandller(async (req, res) => {
+    const { attributeId } = req.params
+    const sellerId = req.user._id
 
-    const attribute = await ProductAttribute.findById(attributeId)
-    if(!attribute) throw new ApiError(404,'Productattribute not found for given id')
-    await ProductAttribute.deleteOne({id:attributeId})
+    const variant = await ProductVariant.findOne({ attributes: attributeId });
+    const product = await Product.findOne({
+        variants: variant?._id,
+        seller: sellerId,
+    });
 
+    if (!product) return res.status(403).json({ message: "Unauthorized" });
+
+    variant.attributes.pull(attributeId);
+    await variant.save();
+
+    await ProductAttribute.findByIdAndDelete(attributeId);
     return res.status(200).json({
-        message:'Attribute delete successfully'
+        message: 'Attribute delete successfully'
     })
 })
 
-
-
-export const addProductVariant  = asynchandller(async(req,res)=>{
-    const {variantName,price,stock,attributes} = req.body 
-
-    if([variantName,price,stock,attributes].some((field)=>field=='')) throw new ApiError(429,'Plz fill all fields')
-    const productvariant = await ProductVariant.create({
-        variant_name:variantName,
-        price,
-        stock_count:stock,
-        attributes
-    })
-
-    return res.status(200).json({
-        message:'ProductVariant set successfully',
-        productvariant
-    })
-})
 
 export const updateVariant = asynchandller(async(req,res)=>{
-    const {variantId,variantName,price,stock,attributes} = req.body
+    const {variantId,variantName,price,stock} = req.body
+    const sellerId = req.user._id
+
+    const variant = await ProductVariant.findById(variantId)
+    if(!variant) throw new ApiError(404,'Variant not found')
     
-    const updatedVariant = await ProductVariant.findByIdAndUpdate(variantId,{variant_name:variantName,price,stock_count:stock,attributes},{new:true})
-    if(updatedVariant) throw new ApiError(404,'Productvariant not found for given id')
+    const product = await Product.findOne({
+        variants:variant?._id,
+        seller:sellerId
+    })
+
+    if (!product) return res.status(403).json({ message: "Unauthorized" });
+    variant.price = price ?? variant.price;
+    variant.stock_count = stock ?? variant.stock_count;
+    variant.variant_name = variantName ?? variant.variant_name;
+
+    await variant.save()
 
     return res.status(200).json({
         message:'Productvariant update successfully',
-        updatedVariant
+        variant
     })
 })
 
-export const deleteVariant =  asynchandller (async(req,res)=>{
-    const {variantId} = req.params
-    if(!variantId) throw new ApiError(429,'Plz pass variant id')
+export const deleteVariant = asynchandller(async (req, res) => {
+    const { variantId } = req.params
+    const sellerId = req.user._id
 
-    const variant = await ProductVariant.findById(variantId)
-    if(!variant) throw new ApiError(404,'Productvariant not found for given id')
+    const product = await Product.findOne({
+        variants: variantId,
+        seller: sellerId,
+    });
 
-    await ProductVariant.deleteOne({id:variantId})
+    if (!product) return res.status(403).json({ message: "Unauthorized" });
+
+    product.variants.pull(variantId);
+    await product.save();
+
+    await ProductVariant.findByIdAndDelete(variantId);
 
     return res.status(200).json({
-        message:"Productvariant delete successfully"
+        message: "Productvariant delete successfully"
     })
 })
