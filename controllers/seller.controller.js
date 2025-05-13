@@ -265,11 +265,9 @@ export const uploadProduct = asynchandller(async (req, res) => {
 
 export const productUpdate = asynchandller(async(req,res)=>{
     const {productId,name,description,brand,category,subcategory,discount,} = req.body
-    const sellerId = req.user.id
-
-    const product = await Product.findOneAndReplace({id:productId,seller:sellerId},{$set:{name,description,brand,category,subcategory,discount}},{new:true})
+    const product = await Product.findByIdAndUpdate(productId,{$set:{name,description,brand,category,subcategory,discount}},{new:true})
     if(!product) throw new ApiError(404,"Product not found")
-        
+
     return res.status(200).json({
         message:'Product update successfully',
         product
@@ -366,12 +364,14 @@ export const deleteVariant = asynchandller(async (req, res) => {
         variants: variantId,
         seller: sellerId,
     });
-
+    const variant = await ProductVariant.findById(variantId)
+    if(!variant) throw new ApiError(404,'Variant not found')
     if (!product) return res.status(403).json({ message: "Unauthorized" });
 
     product.variants.pull(variantId);
     await product.save();
 
+    await ProductAttribute.deleteOne({id:{$in:variant.attributes}})
     await ProductVariant.findByIdAndDelete(variantId);
 
     return res.status(200).json({

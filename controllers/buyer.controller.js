@@ -72,7 +72,7 @@ export const updateBuyer = asynchandller(async (req, res) => {
 
     if(user) throw new ApiError(429,'Email already exist')
 
-    const updatedBuyer = await Buyer.findByIdAndUpdate(buyerId, { $set: { username,name, email, phone } })
+    const updatedBuyer = await Buyer.findByIdAndUpdate(buyerId, { $set: { username,name, email, phone } },{new:true})
 
     return res.status(200).json({
         message: 'Buyer profile update successfully',

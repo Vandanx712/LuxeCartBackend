@@ -17,7 +17,7 @@ export const updateAdmin = asynchandller(async(req,res)=>{
     const check = await findUserByEmail(email)
     if(check) throw new ApiError(400,'Email already exist')
 
-    const updatedAdmin = await Admin.findByIdAndUpdate(admin.id,{username,email})
+    const updatedAdmin = await Admin.findByIdAndUpdate(admin.id,{$set:{username,email}},{new:true})
 
     return res.status(200).json({
         message:"Update admin detail successfully",
@@ -55,12 +55,11 @@ export const createCategory = asynchandller(async(req,res)=>{
 
 export const updateCategory = asynchandller(async(req,res)=>{
     const {categoryId,name,parent} = req.body
-    if([categoryId,name,parent].some((field)=>field=='')) throw new ApiError(429,'Plz fill all field')
 
     const category = await Category.findById(categoryId)
     if(!category) throw new ApiError(404,'Category not found')
 
-    const updatedCategory = await Category.updateOne({_id:category.id},{$set:{name,parent:parent?parent:null,is_subcategory:parent?true:false}})
+    const updatedCategory = await Category.findByIdAndUpdate(categoryId,{$set:{name,parent:parent?parent:null,is_subcategory:parent?true:false}},{new:true})
 
     return res.status(200).json({
         message:"Category update successfully",
