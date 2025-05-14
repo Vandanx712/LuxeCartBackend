@@ -273,6 +273,26 @@ export const productUpdate = asynchandller(async(req,res)=>{
         product
     })
 })
+
+export const productDelete = asynchandller(async (req, res) => {
+    const { productId } = req.params
+
+    const product = await Product.findById(productId)
+    if (!product) throw new ApiError(404, 'Product not found with given id')
+
+    const productImages = product.images
+    const variants = await Promise.all(product.variants.map(async (vari) => ProductVariant.findById(vari)))
+    const attributes = variants.map((vari) => vari.attributes).flat()
+
+    await ProductAttribute.deleteMany({ _id: { $in: attributes } })
+    await ProductVariant.deleteMany({ _id: { $in: product.variants } })
+
+    await Product.deleteOne({_id:productId})
+    // ahi have Aws mathi product photos pan delete karava padse tenu logic aavse 
+    return res.status(200).json({
+        message: 'Product delete successfully'
+    })
+})
 // productattribute and productvariant part :--
 
 
@@ -371,7 +391,7 @@ export const deleteVariant = asynchandller(async (req, res) => {
     product.variants.pull(variantId);
     await product.save();
 
-    await ProductAttribute.deleteOne({id:{$in:variant.attributes}})
+    await ProductAttribute.deleteMany({id:{$in:variant.attributes}})
     await ProductVariant.findByIdAndDelete(variantId);
 
     return res.status(200).json({
