@@ -6,6 +6,9 @@ import dotenv from 'dotenv'
 import sendWelcomeEmail from "../notification/sentWelcomeMail.js";
 import { Coin } from "../models/buyer/coin.model.js";
 import { findUserByEmail } from "./common.controller.js";
+import {Product} from '../models/product/product.model.js'
+import { Wishlist } from "../models/buyer/wishlist.model.js";
+import mongoose from "mongoose";
 
 
 dotenv.config()
@@ -95,3 +98,85 @@ export const getBuyerbyId = asynchandller(async(req,res)=>{
     })
 })
 
+
+// wish list part 
+
+export const addProductInWishlist = asynchandller(async(req,res)=>{
+    const {productId} = req.params
+    const buyerId = req.user.id
+
+    const product = await Product.findById(productId).select('_id name')
+    if(!product) throw new ApiError(404,'Product not found')
+
+    const existWishlist = await Wishlist.findOne({buyer:buyerId})
+
+    if(existWishlist){
+        const existedproductid = existWishlist.products.filter((pt)=>pt==productId)
+        if(existedproductid.length > 0){
+            return res.status(200).json({
+                message:"Product add in wishlist successfully"
+            })
+        }
+        const wishlist = await Wishlist.findByIdAndUpdate(existWishlist.id,{$push:{products:productId}},{new:true})
+        return res.status(200).json({
+            message:"Product add in wishlist successfully",
+            wishlist
+        })
+    }
+    const newList = await Wishlist.create({
+        buyer:buyerId,
+        products:productId
+    })
+    return res.status(200).json({
+        message:"Wishlist create and product add successfully",
+        newList
+    })
+})
+
+export const removeProductfromWishlist = asynchandller(async(req,res)=>{
+    const {productId,listId} = req.params
+
+    const product = await Product.findById(productId).select('_id name')
+    if(!product) throw new ApiError(404,"Product not found")
+
+    const wishlist = await Wishlist.findByIdAndUpdate(listId, { $pull: { products: productId } })
+    if(!wishlist) throw new ApiError(404,"Wishlist not found")
+
+    return res.status(200).json({
+        message: "Product remove from wishlist successfully",
+    })
+})
+
+export const getAllWishlistProducts = asynchandller(async(req,res)=>{
+    const buyerId = req.user.id
+    const wishlistProducts = await Wishlist.aggregate([
+        {
+            $match:{
+                buyer: new mongoose.Types.ObjectId(buyerId)
+            }
+        },
+        {
+            $lookup:{
+                from:"products",
+                localField:'products',
+                foreignField:'_id',
+                as:'products',
+                pipeline:[
+                    {
+                        $project:{
+                            name:1,
+                            price:1,
+                            discount_price:1,
+                            brand:1,
+                            images:1
+                        }
+                    }
+                ]
+            }
+        }
+    ])
+    return res.status(200).json({
+        message:"Fetch all wishlist products",
+        wishlistProducts
+    })
+})
