@@ -9,9 +9,10 @@ const cartSchema = new mongoose.Schema({
     },
     items:[
         {
+            _id:false,
             product:{type:mongoose.Schema.Types.ObjectId,ref:'Product'},
             variant:{type:mongoose.Schema.Types.ObjectId,ref:'Variant'},
-            quantity:{type:mongoose.Schema.Types.Number}
+            quantity:{type:mongoose.Schema.Types.Number,default:1}
         }
     ],
     totalprice:{type:mongoose.Schema.Types.Number,default:0}

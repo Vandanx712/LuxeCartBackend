@@ -8,7 +8,9 @@ import { Coin } from "../models/buyer/coin.model.js";
 import { findUserByEmail } from "./common.controller.js";
 import {Product} from '../models/product/product.model.js'
 import { Wishlist } from "../models/buyer/wishlist.model.js";
+import {Cart} from '../models/buyer/cart.model.js'
 import mongoose from "mongoose";
+import { ProductVariant } from "../models/product/productvariant.model.js";
 
 
 dotenv.config()
@@ -45,10 +47,15 @@ export const registerBuyer = asynchandller(async (req, res) => {
 
     sendWelcomeEmail(newBuyer)
 
-    await Coin.create({
-        buyer: newBuyer.id,
-        coincount: 100
-    })
+    const [wishlist,cart,coin] = await Promise.all([
+        Wishlist.create({buyer:newBuyer.id}),
+        Cart.create({buyer:newBuyer.id}),
+        Coin.create({buyer: newBuyer.id,coincount: 100})
+    ])
+    newBuyer.usercoin = coin.id,
+    newBuyer.wishlist = wishlist.id
+    newBuyer.cart = cart.id
+    await newBuyer.save()
 
     return res.status(200).json({
         message: 'Register successful',
@@ -101,36 +108,32 @@ export const getBuyerbyId = asynchandller(async(req,res)=>{
 
 // wish list part 
 
-export const addProductInWishlist = asynchandller(async(req,res)=>{
-    const {productId} = req.params
+export const addProductInWishlist = asynchandller(async (req, res) => {
+    const { productId } = req.params
     const buyerId = req.user.id
 
     const product = await Product.findById(productId).select('_id name')
-    if(!product) throw new ApiError(404,'Product not found')
+    if (!product) throw new ApiError(404, 'Product not found')
 
-    const existWishlist = await Wishlist.findOne({buyer:buyerId})
+    const existWishlist = await Wishlist.findOne({ buyer: buyerId })
 
-    if(existWishlist){
-        const existedproductid = existWishlist.products.filter((pt)=>pt==productId)
-        if(existedproductid.length > 0){
+    if (existWishlist) {
+        const existedproductid = existWishlist.products.find(ptid=>ptid.toString()===productId)
+        if (existedproductid) {
             return res.status(200).json({
-                message:"Product add in wishlist successfully"
+                message: "Product add in wishlist successfully",
             })
         }
-        const wishlist = await Wishlist.findByIdAndUpdate(existWishlist.id,{$push:{products:productId}},{new:true})
+        else{
+            existWishlist.products.push(productId)
+        }
+        await existWishlist.save()
+
         return res.status(200).json({
-            message:"Product add in wishlist successfully",
-            wishlist
+            message: "Product add in wishlist successfully",
+            existWishlist
         })
     }
-    const newList = await Wishlist.create({
-        buyer:buyerId,
-        products:productId
-    })
-    return res.status(200).json({
-        message:"Wishlist create and product add successfully",
-        newList
-    })
 })
 
 export const removeProductfromWishlist = asynchandller(async(req,res)=>{
@@ -180,3 +183,32 @@ export const getAllWishlistProducts = asynchandller(async(req,res)=>{
         wishlistProducts
     })
 })
+
+// Cart part 
+
+// const existedproduct = await Cart.findOne({'items.product':productId},{'items.$':1}) kaam aavse array ni under ni field thi find karvu hoy tyare use
+export const addProductInCart = asynchandller(async (req, res) => {
+    const { productId, variantId, quantity } = req.body
+    const buyerId = req.user.id
+
+    const [product, variant, cart] = await Promise.all([
+        Product.findById(productId).select('_id name discount_price'),
+        ProductVariant.findById(variantId).select('_id variant_name'),
+        Cart.findOne({ buyer: buyerId })
+    ])
+    if (!product || !variant) throw new ApiError(404, "Product or variant not found")
+
+    const existingitem = cart.items.find(item => item.product.toString() === productId && item.variant.toString() === variantId)
+    if (existingitem) {
+        existingitem.quantity += quantity
+    }
+    else {
+        cart.items.push({ product: productId, variant: variantId, quantity: quantity })
+    }
+    cart.totalprice += product.discount_price * quantity
+    await cart.save()
+    return res.status(200).json({
+        message: 'Product add successfully',
+        cart
+    })
+}) // aaj api jyare buyer cart ma jaine quantity decrease kare tyare pan aaj api use thase

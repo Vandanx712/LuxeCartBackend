@@ -35,6 +35,10 @@ const buyerSchema = new mongoose.Schema({
             ref: 'Address'
         }
     ],
+    usercoin:{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:'Coin'
+    },
     wishlist:{
         type:mongoose.Schema.Types.ObjectId,
         ref:'Wishlist'
