@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addProductInCart, addProductInWishlist, getAllWishlistProducts, getBuyerbyId, registerBuyer, removeProductfromWishlist, updateBuyer } from "../controllers/buyer.controller.js";
+import { addProductInCart, addProductInWishlist, getAllCartProducts, getAllWishlistProducts, getBuyerbyId, registerBuyer, removeProductfromCart, removeProductfromWishlist, updateBuyer } from "../controllers/buyer.controller.js";
 import { verifyjwt } from "../middlewares/verifyjwt.js";
 
 
@@ -18,5 +18,7 @@ buyerRoute.route('/listproducts').get(verifyjwt,getAllWishlistProducts)
 
 // cart part
 buyerRoute.route('/addoncart').put(verifyjwt,addProductInCart)
+buyerRoute.route('/removeoncart/:productId/:variantId').put(verifyjwt,removeProductfromCart)
+buyerRoute.route('/cartproducts').get(verifyjwt,getAllCartProducts)
 
 export default buyerRoute

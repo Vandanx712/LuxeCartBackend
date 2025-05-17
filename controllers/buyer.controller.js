@@ -192,8 +192,8 @@ export const addProductInCart = asynchandller(async (req, res) => {
     const buyerId = req.user.id
 
     const [product, variant, cart] = await Promise.all([
-        Product.findById(productId).select('_id name discount_price'),
-        ProductVariant.findById(variantId).select('_id variant_name'),
+        Product.findById(productId).select('_id name'),
+        ProductVariant.findById(variantId).select('_id variant_name discount_price'),
         Cart.findOne({ buyer: buyerId })
     ])
     if (!product || !variant) throw new ApiError(404, "Product or variant not found")
@@ -205,10 +205,122 @@ export const addProductInCart = asynchandller(async (req, res) => {
     else {
         cart.items.push({ product: productId, variant: variantId, quantity: quantity })
     }
-    cart.totalprice += product.discount_price * quantity
+    cart.totalprice += variant.discount_price * quantity
     await cart.save()
     return res.status(200).json({
         message: 'Product add successfully',
         cart
     })
 }) // aaj api jyare buyer cart ma jaine quantity decrease kare tyare pan aaj api use thase
+
+export const removeProductfromCart = asynchandller(async (req, res) => {
+    const { productId, variantId } = req.params
+    const buyerId = req.user.id
+
+    const [product, variant, cart] = await Promise.all([
+        Product.findById(productId).select('_id name'),
+        ProductVariant.findById(variantId).select('_id variant_name discount_price'),
+        Cart.findOne({ buyer: buyerId })
+    ])
+    if (!product || !variant) throw new ApiError(404, "Product or variant not found")
+
+    const itemIndex = cart.items.findIndex(
+        item =>
+            item.product.toString() === productId.toString() &&
+            item.variant.toString() === variantId.toString()
+    );
+
+    if (itemIndex === -1) {
+        return res.status(404).json({ message: 'Item not found in cart' });
+    }
+
+    const itemToRemove = cart.items[itemIndex];
+    const productPrice = variant.discount_price * itemToRemove.quantity;
+    cart.items.splice(itemIndex, 1);
+    cart.totalprice -= productPrice;
+    await cart.save();
+
+    return res.status(200).json({
+        message: 'Remove product successfully',
+        cart
+    })
+})
+
+export const getAllCartProducts = asynchandller(async (req, res) => {
+  const buyerId = req.user.id;
+
+  const cartProducts = await Cart.aggregate([
+    {
+      $match: {
+        buyer: new mongoose.Types.ObjectId(buyerId)
+      }
+    },
+    { $unwind: "$items" },
+    {
+      $lookup: {
+        from: "products",
+        localField: "items.product",
+        foreignField: "_id",
+        as: "productDetails",
+        pipeline:[
+            {
+                $project:{
+                    name:1,
+                    images:1
+                }
+            }
+        ]
+      }
+    },
+    {
+      $lookup: {
+        from: "productvariants", 
+        localField: "items.variant",
+        foreignField: "_id",
+        as: "variantDetails",
+        pipeline:[
+            {
+                $project:{
+                    name:1,
+                    price:1,
+                    discount_price:1,
+                }
+            }
+        ]
+      }
+    },
+    {
+      $unwind: {
+        path: "$productDetails",
+        preserveNullAndEmptyArrays: true
+      }
+    },
+    {
+      $unwind: {
+        path: "$variantDetails",
+        preserveNullAndEmptyArrays: true
+      }
+    },
+    {
+      $group: {
+        _id: "$_id",
+        buyer: { $first: "$buyer" },
+        totalprice: { $first: "$totalprice" },
+        items: {
+          $push: {
+            product: "$items.product",
+            variant: "$items.variant",
+            quantity: "$items.quantity",
+            productDetails: "$productDetails",
+            variantDetails: "$variantDetails"
+          }
+        }
+      }
+    }
+  ]);
+
+  return res.status(200).json({
+    message: "Fetched all cart products successfully",
+    cartProducts
+  });
+});
