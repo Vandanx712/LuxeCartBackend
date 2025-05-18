@@ -150,6 +150,19 @@ export const removeProductfromWishlist = asynchandller(async(req,res)=>{
     })
 })
 
+export const getListById = asynchandller(async(req,res)=>{
+    const {listId} = req.params
+    const buyerId = req.user.id
+
+    const buyerWishlist = await Wishlist.findOne({_id:list,buyer:buyerId})
+    if(!buyerWishlist) throw new ApiError(404,'Wishlist not found')
+
+    return res.status(200).json({
+        message:'Fetch wishlist successfully',
+        buyerWishlist
+    })
+})
+
 export const getAllWishlistProducts = asynchandller(async(req,res)=>{
     const buyerId = req.user.id
     const wishlistProducts = await Wishlist.aggregate([
@@ -243,6 +256,19 @@ export const removeProductfromCart = asynchandller(async (req, res) => {
     return res.status(200).json({
         message: 'Remove product successfully',
         cart
+    })
+})
+
+export const getCartById = asynchandller(async(req,res)=>{
+    const {cartId} = req.params
+    const buyerId = req.user
+
+    const buyerCart = await Cart.findOne({_id:cartId,buyer:buyerId})
+    if(!buyerCart) throw new ApiError(404,'Cart not found')
+    
+    return res.status(200).json({
+        message:'Fetch cart successfully',
+        buyerCart
     })
 })
 

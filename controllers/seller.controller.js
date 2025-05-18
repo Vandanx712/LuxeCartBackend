@@ -207,6 +207,12 @@ export const uploadProduct = asynchandller(async (req, res) => {
     const { name, description, discount, category, subcategory, brand, variants } = req.body
     if([name,description,category,subcategory].some((field)=>field=='')) throw new ApiError(429,'Plz fill all field')
 
+    const existproduct = await Product.findOne({
+        name: { $regex: name.trim(), $options: 'i' },
+        brand: { $regex: brand.trim(), $options: 'i' }
+    })
+    if(existproduct) throw new ApiError(409,'Product name already exist for given brand')
+
     const parsedVariants = variants || JSON.parse(variants)  // from multipart form
 
     let variantIds = []

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addProductInCart, addProductInWishlist, getAllCartProducts, getAllWishlistProducts, getBuyerbyId, registerBuyer, removeProductfromCart, removeProductfromWishlist, updateBuyer } from "../controllers/buyer.controller.js";
+import { addProductInCart, addProductInWishlist, getAllCartProducts, getAllWishlistProducts, getBuyerbyId, getCartById, getListById, registerBuyer, removeProductfromCart, removeProductfromWishlist, updateBuyer } from "../controllers/buyer.controller.js";
 import { verifyjwt } from "../middlewares/verifyjwt.js";
 
 
@@ -14,11 +14,13 @@ buyerRoute.route('/get/:buyerId').get(verifyjwt,getBuyerbyId)
 // wishlist part
 buyerRoute.route('/addonwishlist/:productId').post(verifyjwt,addProductInWishlist)
 buyerRoute.route('/removeonwishlist/:productId/:listId').put(verifyjwt,removeProductfromWishlist)
+buyerRoute.route('/getlist/:listId').get(verifyjwt,getListById)
 buyerRoute.route('/listproducts').get(verifyjwt,getAllWishlistProducts)
 
 // cart part
 buyerRoute.route('/addoncart').put(verifyjwt,addProductInCart)
 buyerRoute.route('/removeoncart/:productId/:variantId').put(verifyjwt,removeProductfromCart)
+buyerRoute.route('/getcart/:cartId').get(verifyjwt,getCartById)
 buyerRoute.route('/cartproducts').get(verifyjwt,getAllCartProducts)
 
 export default buyerRoute

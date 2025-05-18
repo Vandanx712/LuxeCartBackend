@@ -5,8 +5,8 @@ import {ProductAttribute} from '../models/product/productattribute.model.js'
 import { ProductVariant } from "../models/product/productvariant.model.js"
 import { Product } from "../models/product/product.model.js"
 import mongoose from "mongoose"
-
-
+import { Cart } from "../models/buyer/cart.model.js"
+import { Wishlist } from "../models/buyer/wishlist.model.js"
 
 
 
@@ -137,4 +137,154 @@ export const productGetById = asynchandller(async(req,res)=>{
         message:'Product fetch by id successfully',
         product
     })
+})
+
+
+// Searching & filtering products part
+
+export const searchProduct = asynchandller(async (req, res) => {
+    try {
+        const { query } = req.query
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const [category, subcategory, brand] = await Promise.all([
+            Category.findOne({ name: { $regex: query.trim(), $options: 'i' }, is_subcategory: false }).select('_id'),
+            Category.findOne({ name: { $regex: query.trim(), $options: 'i' }, is_subcategory: true }).select('_id'),
+            Product.findOne({ brand: { $regex: query.trim(), $options: 'i' } }).select('brand -_id')
+        ])
+        let filter = {}
+        if (category) {
+            filter.category = category
+        }
+        else if (subcategory) {
+            filter.subcategory = subcategory
+        }
+        else if (brand) {
+            filter = brand
+        }
+        else {
+            filter.name = { $regex: query.trim(), $options: 'i' }
+        }
+
+        const products = await Product.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }).select('_id name price discount_price discount images')
+        const totalproducts = await Product.countDocuments(filter)
+
+        return res.status(200).json({
+            page,
+            totalpages: Math.ceil(totalproducts / limit),
+            totalproducts,
+            products
+        })
+    } catch (error) {
+        res.status(500).json({
+            message: 'Server error',
+            error
+        })
+    }
+})
+
+export const getProductByCategory = asynchandller(async (req, res) => {
+    try {
+        const { categoryId } = req.params
+
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const [category, subcategory] = await Promise.all([
+            Category.findOne({ _id: categoryId, is_subcategory: false }).select('_id'),
+            Category.findOne({ _id: categoryId, is_subcategory: true }).select('_id')
+        ])
+
+        let filter = {}
+
+        if (category) {
+            filter.category = category
+        }
+        else if (subcategory) {
+            filter.subcategory = subcategory
+        }
+
+        const products = await Product.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }).select('_id name price discount_price discount images')
+        const totalproducts = await Product.countDocuments(filter)
+
+        return res.status(200).json({
+            page,
+            totalpages: Math.ceil(totalproducts / limit),
+            totalproducts,
+            products
+        })
+    } catch (error) {
+        res.status(500).json({
+            message: 'Server error',
+            error
+        })
+    }
+})
+
+
+export const homepageProduct = asynchandller(async (req, res) => {
+    try {
+        const buyerId = req.user.id
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const skip = (page - 1) * limit;
+
+        const cartCategory = await Cart.aggregate([
+            {
+                $match: { buyer: new mongoose.Types.ObjectId(buyerId) }
+            },
+            { $unwind: "$items" },
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: 'items.product',
+                    foreignField: '_id',
+                    as: 'product'
+                }
+            },
+            { $unwind: '$product' },
+            { $group: { _id: '$product.category' } }
+        ])
+
+        const listCategory = await Wishlist.aggregate([
+            {
+                $match: { buyer: new mongoose.Types.ObjectId(buyerId) }
+            },
+            { $unwind: "$products" },
+            {
+                $lookup: {
+                    from: 'products',
+                    localField: 'products',
+                    foreignField: '_id',
+                    as: 'products'
+                }
+            },
+            { $unwind: '$products' },
+            { $group: { _id: '$products.category' } }
+        ])
+
+        const buyerCategories = [...cartCategory, ...listCategory]
+
+        const products = await Product.find({ category: { $in: buyerCategories.map((cat) => cat._id) } })
+            .skip(skip)
+            .limit(limit)
+            .sort({ createdAt: -1 })
+            .select('_id name price discount_price discount images')
+        const totalproducts = await Product.countDocuments({ category: { $in: buyerCategories.map(cat => cat._id) } })
+
+        return res.status(200).json({
+            page,
+            totalpages: Math.ceil(totalproducts / limit),
+            totalproducts,
+            products
+        })
+    } catch (error) {
+        res.status(500).json({
+            message: 'Server error',
+            error
+        })
+    }
 })

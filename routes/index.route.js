@@ -22,7 +22,6 @@ indexRoute.post('/login',login)
 indexRoute.post('/sendotp',sendotp)
 indexRoute.post('/verifyotp',verifyotp)
 indexRoute.post('/updatepassword',updatePassword)
-
 indexRoute.post('/addAddress',verifyjwt,addAddress)
 indexRoute.get('/getallAddress',verifyjwt,getUserAllAddress)
 indexRoute.get('/addressgetByid/:addressId',verifyjwt,getAddressById)
