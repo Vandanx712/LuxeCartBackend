@@ -168,8 +168,10 @@ export const searchProduct = asynchandller(async (req, res) => {
             filter.name = { $regex: query.trim(), $options: 'i' }
         }
 
-        const products = await Product.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }).select('_id name price discount_price discount images')
-        const totalproducts = await Product.countDocuments(filter)
+        const [products,totalproducts] = await Promise.all([
+            Product.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }).select('_id name price discount_price discount images'),
+            Product.countDocuments(filter)
+        ])
 
         return res.status(200).json({
             page,
@@ -207,8 +209,10 @@ export const getProductByCategory = asynchandller(async (req, res) => {
             filter.subcategory = subcategory
         }
 
-        const products = await Product.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }).select('_id name price discount_price discount images')
-        const totalproducts = await Product.countDocuments(filter)
+        const [products,totalproducts] = await Promise.all([
+            Product.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }).select('_id name price discount_price discount images'),
+            Product.countDocuments(filter)
+        ])
 
         return res.status(200).json({
             page,
@@ -232,48 +236,69 @@ export const homepageProduct = asynchandller(async (req, res) => {
         const limit = parseInt(req.query.limit) || 10;
         const skip = (page - 1) * limit;
 
-        const cartCategory = await Cart.aggregate([
-            {
-                $match: { buyer: new mongoose.Types.ObjectId(buyerId) }
-            },
-            { $unwind: "$items" },
-            {
-                $lookup: {
-                    from: 'products',
-                    localField: 'items.product',
-                    foreignField: '_id',
-                    as: 'product'
-                }
-            },
-            { $unwind: '$product' },
-            { $group: { _id: '$product.category' } }
+        const [cartCategory, listCategory] = await Promise.all([
+            Cart.aggregate([
+                {
+                    $match: { buyer: new mongoose.Types.ObjectId(buyerId) }
+                },
+                { $unwind: "$items" },
+                {
+                    $lookup: {
+                        from: 'products',
+                        localField: 'items.product',
+                        foreignField: '_id',
+                        as: 'product'
+                    }
+                },
+                { $unwind: '$product' },
+                { $group: { _id: '$product.category' } }
+            ]),
+            Wishlist.aggregate([
+                {
+                    $match: { buyer: new mongoose.Types.ObjectId(buyerId) }
+                },
+                { $unwind: "$products" },
+                {
+                    $lookup: {
+                        from: 'products',
+                        localField: 'products',
+                        foreignField: '_id',
+                        as: 'products'
+                    }
+                },
+                { $unwind: '$products' },
+                { $group: { _id: '$products.category' } }
+            ])
         ])
-
-        const listCategory = await Wishlist.aggregate([
-            {
-                $match: { buyer: new mongoose.Types.ObjectId(buyerId) }
-            },
-            { $unwind: "$products" },
-            {
-                $lookup: {
-                    from: 'products',
-                    localField: 'products',
-                    foreignField: '_id',
-                    as: 'products'
-                }
-            },
-            { $unwind: '$products' },
-            { $group: { _id: '$products.category' } }
-        ])
-
         const buyerCategories = [...cartCategory, ...listCategory]
 
-        const products = await Product.find({ category: { $in: buyerCategories.map((cat) => cat._id) } })
-            .skip(skip)
-            .limit(limit)
-            .sort({ createdAt: -1 })
-            .select('_id name price discount_price discount images')
-        const totalproducts = await Product.countDocuments({ category: { $in: buyerCategories.map(cat => cat._id) } })
+        if (buyerCategories.length == 0) {
+            const [products,totalproducts] = await Promise.all([
+                Product.find({})
+                    .skip(skip)
+                    .limit(limit)
+                    .sort({ createdAt: -1 })
+                    .select('_id name price discount_price discount images'),
+
+                Product.countDocuments({})
+            ])
+
+            return res.status(200).json({
+                page,
+                totalpages: Math.ceil(totalproducts / limit),
+                totalproducts,
+                products
+            })
+        }
+
+        const [products, totalproducts] = await Promise.all([
+            Product.find({ category: { $in: buyerCategories.map((cat) => cat._id) } })
+                .skip(skip)
+                .limit(limit)
+                .sort({ createdAt: -1 })
+                .select('_id name price discount_price discount images'),
+            Product.countDocuments({ category: { $in: buyerCategories.map(cat => cat._id) } })
+        ])
 
         return res.status(200).json({
             page,
