@@ -11,9 +11,18 @@ import { Wishlist } from "../models/buyer/wishlist.model.js";
 import {Cart} from '../models/buyer/cart.model.js'
 import mongoose from "mongoose";
 import { ProductVariant } from "../models/product/productvariant.model.js";
+import { Orderitem } from "../models/order/orderitem.model.js";
+import { Order } from "../models/order/order.model.js";
+import { Payment } from "../models/order/payment.model.js";
+import { Seller } from "../models/seller/seller.model.js";
+import sentStockAlertEmail from "../notification/sentStockAlert.js";
 
 
 dotenv.config()
+export const razorpayInstance = new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID,
+  key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
 
 
 export const registerBuyer = asynchandller(async (req, res) => {
@@ -350,3 +359,127 @@ export const getAllCartProducts = asynchandller(async (req, res) => {
     cartProducts
   });
 });
+
+
+// Order part 
+
+export const createOrder= asynchandller(async(req,res)=>{
+    const {items,address,payment_method} = req.body
+    const buyerId = req.user.id
+
+    let totalprice = 0
+    const groupedItems = {}
+
+    for(const item of items){
+        const product = await Product.findById(item.productId)
+        const variant = await ProductVariant.findById(item.variantId)
+        const SellerId = product.seller.toString()
+        const seller = await Seller.findById(SellerId)
+
+        if (variant.stock_count <= 1) {
+            await sentStockAlertEmail(seller.email,seller.username,product.name,variant.variant_name)
+        }
+
+        if(!groupedItems[SellerId]){
+            groupedItems[SellerId] = []
+        }
+        groupedItems[SellerId].push({...item,SellerId})
+        console.log(groupedItems,'groupeditems')
+    }
+
+    for(const SellerId in groupedItems){
+        const sellerItems = groupedItems[SellerId]
+        console.log(sellerItems,'selleritems')
+        
+        const orderItems = await Promise.all(
+            sellerItems.map(async(item)=>{
+                const variant = ProductVariant.findById(item.variantId)
+                const orderItem = Orderitem.create({
+                    product:item.productId,
+                    variant:item.variantId,
+                    quantity:item.quantity,
+                    price:variant.discount_price
+                })
+                totalprice += variant.discount_price*item.quantity
+                console.log(totalprice)
+                variant.stock_count -= item.quantity
+                console.log(variant.stock_count)
+                variant.save()
+                return orderItem
+            })
+        )
+        console.log(orderItems)
+        
+        const order = await Order.create({
+            buyer:buyerId,
+            seller:SellerId,
+            items:orderItems,
+            total_price:totalprice,
+            shipping_address:address
+        })
+        const seller = await Seller.findById(SellerId)
+
+        console.log(order)
+        seller.orders.push(order._id)
+        await seller.save()
+        // info mail aavse 
+
+        if(payment_method !=='Cash on Delivery'){
+            const razorpayOrder = await razorpayInstance.orders.create({
+                amount:totalprice,
+                currency:'INR',
+                receipt:`receipt_order_${order.id}`
+            })
+            await Payment.create({
+                order:order.id,
+                buyer:buyerId,
+                payment_method:payment_method,
+                transaction_id:razorpayOrder.id,
+                payment_status:'Pending'
+            })
+
+            return res.status(200).json({
+                message:'Razorpay order create successfully',
+                razorpayOrderId:razorpayOrder.id,
+                amount:totalprice,
+                currency:'INR',
+                orderId:order.id
+            })
+        }
+        else{
+            await Payment.create({
+                order:order._id,
+                buyer:buyerId,
+                payment_method:'Cash on Delivery',
+                amount:totalprice
+            })
+    
+            return res.status(200).json({
+                message:'Order created with Cash on Delivery',
+                order
+            })
+        }
+    }
+})
+
+export const verifyPayment = asynchandller(async(req,res)=>{
+    try {
+        const {razorpay_order_id,razorpay_payment_id,razorpay_signature,orderId} = req.body
+    
+        const generatedSignature = crypto
+            .createHmac("van123", process.env.RAZORPAY_KEY_SECRET)
+            .update(razorpay_order_id + '|' + razorpay_payment_id)
+            .digest('hex')
+    
+        if(generatedSignature !== razorpay_signature) throw new ApiError(400,'Invalid signature')
+        await Payment.findOneAndUpdate({transaction_id:razorpay_order_id},{payment_status:'Completed'},{new:true})
+        await Order.findByIdAndUpdate(orderId,{payment_status:'Completed'},{new:true})
+        
+        return res.status(200).json({
+            message:'Payment verified successfully'
+        })
+    } catch (error) {
+        console.error("Payment verification failed:", err);
+        return res.status(500).json({ error: "Payment verification failed" });
+    }
+})
