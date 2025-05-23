@@ -1,7 +1,7 @@
 import { DeliveryBoy } from "../models/seller/deliveryboy.model.js";
 import { ApiError } from "../utill/apierror.js";
 import { asynchandller } from "../utill/asynchandller.js";
-
+import bcrypt from 'bcrypt'
 
 
 
@@ -20,7 +20,7 @@ export const getDeliveryboyById = asynchandller(async(req,res)=>{
 })
 
 export const updateBoyProfile = asynchandller(async(req,res)=>{
-    const {username, name, email, phone} = req.body
+    const {username, name, email, newpassword ,phone} = req.body
     const boyId = req.user.id
 
     const existBoy = await DeliveryBoy.findOne({$or:[{username,email,phone}]}).select('-password')
@@ -34,7 +34,8 @@ export const updateBoyProfile = asynchandller(async(req,res)=>{
 
     if(user) throw new ApiError(400,'Email already exist')
 
-    const updatedBoy = await DeliveryBoy.findByIdAndUpdate(boyId,{username,name,email:email.toLowerCase(),phone},{new:true})
+    const updatedBoy = await DeliveryBoy.findByIdAndUpdate(boyId,{username,name,email:email.toLowerCase(),password:await bcrypt.hash(newpassword,10),phone},{new:true})
+    if(!updatedBoy) throw new ApiError(404,'DeliveryBoy not found')
 
     return res.status(200).json({
         message:'Deliveryboy profile update successfully',

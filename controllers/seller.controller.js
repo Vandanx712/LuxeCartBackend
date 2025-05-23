@@ -152,8 +152,7 @@ export const createDeliveryBoy = asynchandller(async (req, res) => {
         vehicle_type,
         vehicle_number,
     })
-
-    sendAccountDetailEmail(newDeliveryBoy)
+    sendAccountDetailEmail(newDeliveryBoy,password)
 
     return res.status(200).json({
         message: 'Register DeliveryBoy successfully',

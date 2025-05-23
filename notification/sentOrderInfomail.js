@@ -1,9 +1,11 @@
 import nodemailer from 'nodemailer'
 import dotenv from 'dotenv'
+import fs from 'fs'
+import path from 'path'
 
 dotenv.config()
 
-async function sentOrderInfomail(email) {
+async function sentOrderInfomail(seller) {
     const transporter = nodemailer.createTransport({
         service:"Gmail",
         auth:{
@@ -11,12 +13,14 @@ async function sentOrderInfomail(email) {
             pass: process.env.ADMIN_EMAIL_SCERECT_KEY
         }
     })
+
+    const orderhtml = fs.readFileSync(path.join(__dirname,'order.html'),'utf-8').replace("#username#",seller.username)
     
     await transporter.sendMail({
         from:process.env.ADMIN_EMAIL,
-        to:email,
+        to:seller.email,
         subject:"Order info",
-        text:'One Order placed plz fulfill buyer order'
+        html:orderhtml
     })
     
 }

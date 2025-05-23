@@ -1,5 +1,7 @@
 import nodemailer from 'nodemailer'
 import dotenv from 'dotenv'
+import fs from 'fs'
+import path from 'path'
 
 dotenv.config()
 
@@ -13,11 +15,12 @@ async function sendWelcomeEmail(user) {
         },
     });
 
+    const welcomehtml = fs.readFileSync(path.join(__dirname,'welcome.html'),'utf-8').replace("#username#",user.username)
     await transporter.sendMail({
         from: process.env.ADMIN_EMAIL,
         to: user.email,
         subject: `Welcome Email`,
-        text:` Hello ${user.name}, Welcome to LuxeCart. Let improve your shooping experience.`,
+        html:welcomehtml
     });
 }
 

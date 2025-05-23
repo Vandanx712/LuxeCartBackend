@@ -16,6 +16,7 @@ import { Order } from "../models/order/order.model.js";
 import { Payment } from "../models/order/payment.model.js";
 import { Seller } from "../models/seller/seller.model.js";
 import sentStockAlertEmail from "../notification/sentStockAlert.js";
+import sentOrderInfomail from "../notification/sentOrderInfomail.js";
 
 
 dotenv.config()
@@ -422,7 +423,7 @@ export const createOrder= asynchandller(async(req,res)=>{
         console.log(order)
         seller.orders.push(order._id)
         await seller.save()
-        // info mail aavse 
+        await sentOrderInfomail(seller)
 
         if(payment_method !=='Cash on Delivery'){
             const razorpayOrder = await razorpayInstance.orders.create({
