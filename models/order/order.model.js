@@ -15,12 +15,9 @@ const orderSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             ref: "DeliveryBoy"
         },
-        items: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "OrderItem"
-            }
-        ],
+        items:{
+            type:mongoose.Schema.Types.Mixed
+        },
         total_price: {
             type: mongoose.Schema.Types.Number
         },

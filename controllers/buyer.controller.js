@@ -364,7 +364,7 @@ export const getAllCartProducts = asynchandller(async (req, res) => {
 
 // Order part 
 
-export const createOrder= asynchandller(async(req,res)=>{
+export const createOrderFromCart= asynchandller(async(req,res)=>{
     const {items,address,payment_method} = req.body
     const buyerId = req.user.id
 
@@ -405,7 +405,7 @@ export const createOrder= asynchandller(async(req,res)=>{
                 console.log(totalprice)
                 variant.stock_count -= item.quantity
                 console.log(variant.stock_count)
-                variant.save()
+                await variant.save()
                 return orderItem
             })
         )
@@ -460,6 +460,81 @@ export const createOrder= asynchandller(async(req,res)=>{
                 order
             })
         }
+    }
+})
+
+export const createOrderForSingle = asynchandller(async(req,res)=>{
+    const {productId,variantId,quantity,address,payment_method} = req.body
+    const buyerId = req.user.id
+
+    const [product,variant] = await Promise.all([
+        Product.findById(productId),
+        ProductVariant.findById(variantId)
+    ])
+    if(!product) throw new ApiError(404,"Product not found with given id")
+    if(!variantId) throw new ApiError(404,'Productvariant not found with given id')
+
+    const seller = await Seller.findById(product.seller.toString())
+    if(!seller) throw new ApiError(404,'Seller not found')
+
+    if(variant.stock_count <= 1){
+        await sentStockAlertEmail(seller.email,seller.username,product.name,variant.variant_name)
+    }
+
+    const orderitem = await Orderitem.create({
+        product: product.id,
+        variant: variant.id,
+        quantity: quantity,
+        price: variant.discount_price
+    })
+
+    const order = await Order.create({
+        buyer: buyerId,
+        seller: seller.id,
+        items: orderitem,
+        shipping_address: address,
+        total_price: variant.discount_price * quantity
+    })
+    variant.stock_count -= quantity
+    await variant.save()
+    seller.orders.push(order._id)
+    await seller.save()
+    await sentOrderInfomail(seller)
+
+    if (payment_method !== 'Cash on Delivery') {
+        const razorpayOrder = await razorpayInstance.orders.create({
+            amount: totalprice,
+            currency: 'INR',
+            receipt: `receipt_order_${order.id}`
+        })
+        await Payment.create({
+            order: order.id,
+            buyer: buyerId,
+            payment_method: payment_method,
+            transaction_id: razorpayOrder.id,
+            payment_status: 'Pending'
+        })
+
+        return res.status(200).json({
+            message: 'Razorpay order create successfully',
+            razorpayOrderId: razorpayOrder.id,
+            amount: totalprice,
+            currency: 'INR',
+            orderId: order.id
+        })
+    }
+    else {
+        await Payment.create({
+            order: order._id,
+            buyer: buyerId,
+            payment_method: 'Cash on Delivery',
+            amount: order.total_price
+        })
+
+        return res.status(200).json({
+            message: 'Order created with Cash on Delivery',
+            order
+        })
     }
 })
 
