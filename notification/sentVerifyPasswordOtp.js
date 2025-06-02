@@ -8,14 +8,14 @@ dotenv.config()
 
 async function sendVerifyPasswordOtpEmail(user,otp) {
     const transporter = nodemailer.createTransport({
-        service: "Gmail",
+        service: "gmail",
         auth: { 
             user:process.env.ADMIN_EMAIL,
             pass:process.env.ADMIN_EMAIL_SCERECT_KEY
         },
     });
     
-    const otphtml = fs.readFileSync(path.join(__dirname,"otp.html"),"utf-8").replace('#otp#',otp).replace("#username#",user.username)
+    const otphtml = fs.readFileSync(path.join("notification/otp.html"),"utf-8").replace('#otp#',otp).replace("#username#",user.username)
     await transporter.sendMail({
         from: process.env.ADMIN_EMAIL,
         to: user.email,

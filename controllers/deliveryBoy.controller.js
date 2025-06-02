@@ -42,3 +42,66 @@ export const updateBoyProfile = asynchandller(async(req,res)=>{
         updatedBoy
     })
 })
+// Order part
+
+export const getYourOrderByStatus = asynchandller(async (req, res) => {
+    const deliveryboyId = req.user.id
+    const { order_status } = req.body
+
+    const match = {}
+    if (!order_status) {
+        match.match = {
+            $match: {
+                delivery_boy: new mongoose.Types.ObjectId(deliveryboyId),
+            }
+        }
+    } else {
+        match.match = {
+            $match: {
+                delivery_boy: new mongoose.Types.ObjectId(deliveryboyId),
+                order_status: order_status
+            }
+        };
+    }
+    const lookupproduct = {
+        $lookup: {
+            from: 'products',
+            localField: 'items.product',
+            foreignField: '_id',
+            as: "product",
+            pipeline: [
+                {
+                    $project: {
+                        name: 1,
+                        images: 1
+                    }
+                }
+            ]
+        }
+    };
+    const lookupvariant = {
+        $lookup: {
+            from: 'productvariants',
+            localField: 'items.variant',
+            foreignField: '_id',
+            as: 'variant',
+            pipeline: [
+                {
+                    $project: {
+                        name: 1,
+                        price: 1,
+                        discount_price: 1,
+                        stock_count: 1
+                    }
+                }
+            ]
+        }
+    };
+    const deliveryBoyOrders = await Order.aggregate([match.match, lookupproduct, lookupvariant]).sort({ createdAt: -1 })
+    const totalOrder = sellerOrders.length
+    return res.status(200).json({
+        message: 'Fetch seller order by order_status',
+        deliveryBoyOrders,
+        totalOrder
+    })
+})

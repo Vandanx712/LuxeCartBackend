@@ -17,6 +17,7 @@ import { Payment } from "../models/order/payment.model.js";
 import { Seller } from "../models/seller/seller.model.js";
 import sentStockAlertEmail from "../notification/sentStockAlert.js";
 import sentOrderInfomail from "../notification/sentOrderInfomail.js";
+import Razorpay from "razorpay";
 
 
 dotenv.config()
@@ -385,31 +386,26 @@ export const createOrderFromCart= asynchandller(async(req,res)=>{
             groupedItems[SellerId] = []
         }
         groupedItems[SellerId].push({...item,SellerId})
-        console.log(groupedItems,'groupeditems')
     }
 
     for(const SellerId in groupedItems){
         const sellerItems = groupedItems[SellerId]
-        console.log(sellerItems,'selleritems')
         
         const orderItems = await Promise.all(
             sellerItems.map(async(item)=>{
-                const variant = ProductVariant.findById(item.variantId)
-                const orderItem = Orderitem.create({
+                const variant = await ProductVariant.findById(item.variantId)
+                const orderItem = await Orderitem.create({
                     product:item.productId,
                     variant:item.variantId,
                     quantity:item.quantity,
                     price:variant.discount_price
                 })
                 totalprice += variant.discount_price*item.quantity
-                console.log(totalprice)
                 variant.stock_count -= item.quantity
-                console.log(variant.stock_count)
                 await variant.save()
                 return orderItem
             })
         )
-        console.log(orderItems)
         
         const order = await Order.create({
             buyer:buyerId,
@@ -420,7 +416,6 @@ export const createOrderFromCart= asynchandller(async(req,res)=>{
         })
         const seller = await Seller.findById(SellerId)
 
-        console.log(order)
         seller.orders.push(order._id)
         await seller.save()
         await sentOrderInfomail(seller)

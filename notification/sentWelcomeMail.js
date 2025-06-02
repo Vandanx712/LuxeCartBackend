@@ -8,14 +8,14 @@ dotenv.config()
 
 async function sendWelcomeEmail(user) {
     const transporter = nodemailer.createTransport({
-        service: "Gmail",
+        service: "gmail",
         auth: { 
             user:process.env.ADMIN_EMAIL,
             pass:process.env.ADMIN_EMAIL_SCERECT_KEY
         },
     });
 
-    const welcomehtml = fs.readFileSync(path.join(__dirname,'welcome.html'),'utf-8').replace("#username#",user.username)
+    const welcomehtml = fs.readFileSync(path.join('notification/welcome.html'),'utf-8').replace("#username#",user.username)
     await transporter.sendMail({
         from: process.env.ADMIN_EMAIL,
         to: user.email,

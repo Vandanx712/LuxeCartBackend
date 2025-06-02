@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { deleteAttribute, deleteVariant, getAllDeliveryBoy, getFreedeliveryBoy, getOndeliveryBoy, getSellerById, productDelete, productUpdate, sellerlogin, sellerRegister, updateAttribute, updateSeller, updateVariant, uploadProduct } from "../controllers/seller.controller.js";
+import { assignOrder, deleteAttribute, deleteVariant, getAllDeliveryBoy, getFreedeliveryBoy, getOndeliveryBoy, getOrderByStatus, getSellerById, productDelete, productUpdate, sellerlogin, sellerRegister, updateAttribute, updateSeller, updateVariant, uploadProduct } from "../controllers/seller.controller.js";
 import { verifyjwt } from "../middlewares/verifyjwt.js";
 import verifyRoles from '../middlewares/verifyrole.js'
 
@@ -28,5 +28,9 @@ sellerRouter.route('/updateattribute').put(verifyjwt,verifyRoles(['seller']),upd
 sellerRouter.route('/deleteattribute/:attributeId').delete(verifyjwt,verifyRoles(['seller']),deleteAttribute)
 sellerRouter.route('/updatevariant').put(verifyjwt,verifyRoles(['seller']),updateVariant)
 sellerRouter.route('/deletevariant/:variantId').delete(verifyjwt,verifyRoles(['seller']),deleteVariant)
+
+// Order part
+sellerRouter.route('/getorderbystatus').post(verifyjwt,verifyRoles(['seller']),getOrderByStatus)
+sellerRouter.route('/assignorder/:deliveryboyId').put(verifyjwt,verifyRoles(['seller']),assignOrder)
 
 export default sellerRouter

@@ -5,7 +5,7 @@ dotenv.config()
 
 async function sentStockAlertEmail(sellerEmail,username,productname,varintname) {
     const transporter = nodemalier.createTransport({
-        service:"Gmail",
+        service:"gmail",
         auth:{
             user:process.env.ADMIN_EMAIL,
             pass:process.env.ADMIN_EMAIL_SCERECT_KEY
