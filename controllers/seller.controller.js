@@ -13,6 +13,7 @@ import path from "path";
 import { Product } from "../models/product/product.model.js";
 import { Order } from '../models/order/order.model.js'
 import sentOrderInfoForBoy from "../notification/sentOrderInfoForBoy.js";
+import mongoose from "mongoose";
 
 
 
@@ -408,31 +409,35 @@ export const deleteVariant = asynchandller(async (req, res) => {
 
 // order part 
 
-export const getOrderByStatus = asynchandller(async (req, res) => {
+export const getOrderByStatus = asynchandller(async(req,res)=>{
     const sellerId = req.user.id
-    const { order_status } = req.body
+    const {order_status}= req.body
 
-    const match = {}
-    if (!order_status) {
-        match.match = {
-            $match: {
-                seller: new mongoose.Types.ObjectId(sellerId),
-            }
+    const sellerOrders = await Order.find({seller:sellerId,order_status:order_status}).sort({createdAt:-1})
+    const totalOrder = sellerOrders.length
+
+    return res.status(200).json({
+        message:'Fetch all order by status successfully',
+        sellerOrders,
+        totalOrder
+    })
+})
+
+export const getOrderById = asynchandller(async (req, res) => {
+    const {orderId} = req.params
+
+    const match = {
+        $match: {
+            _id: new mongoose.Types.ObjectId(orderId),
         }
-    } else {
-        match.match = {
-            $match:{
-                seller: new mongoose.Types.ObjectId(sellerId),
-                order_status:order_status
-            }
-        };
-    }
+    };
+
     const lookupproduct = {
         $lookup: {
             from: 'products',
             localField: 'items.product',
             foreignField: '_id',
-            as: "product",
+            as: 'items.product',
             pipeline: [
                 {
                     $project: {
@@ -443,32 +448,77 @@ export const getOrderByStatus = asynchandller(async (req, res) => {
             ]
         }
     };
+
     const lookupvariant = {
         $lookup: {
             from: 'productvariants',
             localField: 'items.variant',
             foreignField: '_id',
-            as: 'variant',
+            as: 'items.variant',
             pipeline: [
                 {
                     $project: {
-                        name: 1,
-                        price: 1,
-                        discount_price: 1,
-                        stock_count: 1
+                        variant_name: 1,
                     }
                 }
             ]
         }
     };
-    const sellerOrders = await Order.aggregate([match.match,lookupproduct,lookupvariant]).sort({ createdAt: -1 })
-    const totalOrder = sellerOrders.length
+
+    const unwindItems = { $unwind: "$items" };
+    const unwindProduct = { $unwind: { path: "$items.product", preserveNullAndEmptyArrays: true } };
+    const unwindVariant = { $unwind: { path: "$items.variant", preserveNullAndEmptyArrays: true } };
+    const shipping_address = {
+        $lookup:{
+            from:'addresses',
+            localField:'shipping_address',
+            foreignField:'_id',
+            as:'shipping_address',
+            pipeline:[
+                {
+                    $project:{
+                        street:1,
+                        city:1,
+                        state:1,
+                        zip_code:1,
+                    }
+                }
+            ]
+        }
+    }
+
+    const groupItems = {
+        $group: {
+            _id: "$_id",
+            buyer: { $first: "$buyer" },
+            seller: { $first: "$seller" },
+            delivery_boy: { $first: "$delivery_boy" },
+            items: { $push: "$items" },
+            total_price: { $first: "$total_price" },
+            payment_status: { $first: "$payment_status" },
+            order_status: { $first: "$order_status" },
+            shipping_address: { $first: "$shipping_address" },
+            createdAt: { $first: "$createdAt" },
+            updatedAt: { $first: "$updatedAt" }
+        }
+    };
+
+    const sellerOrders = await Order.aggregate([
+        match,
+        unwindItems,
+        lookupproduct,
+        lookupvariant,
+        unwindProduct,
+        unwindVariant,
+        shipping_address,
+        groupItems
+    ])
     return res.status(200).json({
         message: 'Fetch seller order by order_status',
-        sellerOrders,
-        totalOrder
-    })
-})
+        sellerOrders
+    });
+});
+
 
 export const assignOrder = asynchandller(async(req,res)=>{
     const {deliveryboyId} = req.params
@@ -478,10 +528,10 @@ export const assignOrder = asynchandller(async(req,res)=>{
     const deliveryboy = await DeliveryBoy.findById(deliveryboyId)
     if(!deliveryboy || deliveryboy.is_ondelivery==true) throw new ApiError(404,'DeliveryBoy not found or he is on delivery')
     
-    const order = await Order.findOneAndUpdate({seller:sellerId},{$set:{delivery_boy:deliveryboyId}},{new:true})
+    const order = await Order.findOneAndUpdate({seller:sellerId},{$set:{delivery_boy:deliveryboyId,order_status:"Shipped"}},{new:true})
     if(!order) throw new ApiError(404,'Order not found')
     
-    await sentOrderInfoForBoy(deliveryboy.username)
+    await sentOrderInfoForBoy(deliveryboy)
 
     return res.status(200).json({
         message:'Order assign for deliveryBoy successfully',

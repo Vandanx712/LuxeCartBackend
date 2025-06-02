@@ -16,7 +16,7 @@ async function sentOrderInfoForBoy(delivery) {
         from:process.env.ADMIN_EMAIL,
         to:delivery.email,
         subject:'Assign Order',
-        text:`Hello ${delivery} DeliveryBoy, Our team assigned new Order for you.Please pick up and deliver safely.Please check whole order details from your deshboard.`
+        text:`Hello ${delivery.username} DeliveryBoy, Our team assigned new Order for you.Please pick up and deliver safely.Please check whole order details from your deshboard.`
     })
 }
 
