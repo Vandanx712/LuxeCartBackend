@@ -54,25 +54,25 @@ export const login = asynchandller(async (req, res) => {
         secure: true
     }
 
-    if(user.role == 'buyer'){
-        user.populate(['usercoin','wishlist','cart'])
+    if (user.role == 'buyer') {
+        user.populate(['usercoin', 'wishlist', 'cart'])
         await user.save()
-         return res.status(200)
-        .cookie('accessToken', accessToken, options)
-        .cookie('refreshToken', refreshToken, options)
-        .json({
-            message: 'Login successfully',
-            user: {
-                username: user.username,
-                name: user.name || null,
-                email: user.email,
-                role: user.role,
-                profileImg: user.profileImg || null,
-                usercoin:user.usercoin,
-                wishlist:user.wishlist,
-                cart:user.cart
-            }
-        })
+        return res.status(200)
+            .cookie('accessToken', accessToken, options)
+            .cookie('refreshToken', refreshToken, options)
+            .json({
+                message: 'Login successfully',
+                user: {
+                    username: user.username,
+                    name: user.name || null,
+                    email: user.email,
+                    role: user.role,
+                    profileImg: user.profileImg || null,
+                    usercoin: user.usercoin,
+                    wishlist: user.wishlist,
+                    cart: user.cart
+                }
+            })
     }
 
     return res.status(200)

@@ -58,3 +58,16 @@ export const getOrderByStatus = asynchandller(async(req,res)=>{
         totalOrder
     })
 })
+
+export const updateOrderstatus = asynchandller(async(req,res)=>{
+    const {orderId} = req.params
+    if(orderId) throw new ApiError(400,'Order id must be required')
+
+    const order = await Order.findByIdAndUpdate(orderId,{order_status:"Delivered"},{new:true})
+    if(!order) throw new ApiError(404,'Order not found with given id')
+
+    return res.status(200).json({
+        message:'Order status update successfully',
+        order
+    })
+})
