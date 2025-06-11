@@ -13,12 +13,15 @@ const buyerSchema = new mongoose.Schema({
         type:mongoose.Schema.Types.String,
         trim:true
     },
+    providerAccountId:{
+        type:mongoose.Schema.Types.String,
+        default:null
+    },
     phone:{
         type:mongoose.Schema.Types.Number
     },
     password:{
-        type:mongoose.Schema.Types.String,
-        trim:true,
+        type:mongoose.Schema.Types.String
     },
     profileImg:{
         key:{type:mongoose.Schema.Types.String},

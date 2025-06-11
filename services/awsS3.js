@@ -33,7 +33,7 @@ export const uploadPic = async (key, files) => {
             const getcommand = new GetObjectCommand({
                 Bucket: bucketname,
                 Key: imageKey,
-            })
+            }) // ahi url e public bucket no aavse  same  updatePic ma aavse 
             return { imageKey, url }
         })
     )

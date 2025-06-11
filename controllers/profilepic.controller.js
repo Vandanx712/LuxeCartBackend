@@ -1,7 +1,7 @@
 import { ApiError } from "../utill/apierror.js"
 import { asynchandller } from "../utill/asynchandller.js"
 import { AwsStorePath } from "../utill/filesPath.js"
-import { updatePic, uploadPic } from "../utill/awsS3.js"
+import { updatePic, uploadPic } from "../services/awsS3.js"
 
 
 

@@ -4,6 +4,9 @@ import bcrypt from 'bcrypt'
 import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
 import { findUserByEmail } from './common.controller.js';
+import { decodeIdToken, generateCodeVerifier, generateState } from "arctic";
+import { google } from "../services/goolge.js";
+import { Buyer } from "../models/buyer/buyer.model.js";
 
 dotenv.config()
 
@@ -87,5 +90,98 @@ export const login = asynchandller(async (req, res) => {
                 role: user.role,
                 profileImg: user.profileImg || null
             }
+        })
+})
+
+//Google login part
+export const getGoolgeLoginpage = asynchandller(async(req,res)=>{
+    const state = generateState()
+    const codeverifier = generateCodeVerifier()
+    const url = google.createAuthorizationURL(state,codeverifier,[
+        'openid',
+        'profile',
+        'email'
+    ])
+
+    const cookieConfig = {
+        httpOnly:true,
+        secure:true,
+        maxAge:2*60*1000,
+        sameSite:'lax'
+    }
+
+    res.cookie('google_oauth_state',state,cookieConfig)
+    res.cookie('google_code_verifier',codeverifier,cookieConfig)
+    res.redirect(url.toString())
+})
+
+export const getGoogleLoginCallback = asynchandller(async(req,res)=>{
+    const {code,state} = req.query
+
+    const {
+        google_oauth_state: storedState, //alicename aapyu chhe 
+        google_code_verifier: codeVerfier
+    } = req.cookies
+
+    if(
+        !code ||
+        !state ||
+        !storedState ||
+        !codeVerfier ||
+        state !== storedState
+    ) throw new ApiError(400,"Couldn't login with Google because of invalid login attempt. Please try again!")
+
+    let token
+    try {
+        token = await google.validateAuthorizationCode(code,codeVerfier)
+    } catch (error) {
+        console.log(error)
+        throw new ApiError(400,"Couldn't login with Google because of invalid login attempt. Please try again!")
+    }
+
+    const details = decodeIdToken(token.idToken())
+    console.log(details)
+
+    const {sub:googleUserId,name,email,phone,picture} = details
+
+    const user = await findUserByEmail(email)
+    if(user && user.role!=='buyer') throw new ApiError(400,'User already exist for other roles')
+
+    if (!user.password && user.providerAccountId) {
+        const accessToken = await generateAccessToken(user)
+        const refreshToken = await generateRefreshToken(user.id)
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+        return res.status(200)
+            .cookie('accessToken', accessToken, options)
+            .cookie('refreshToken', refreshToken, options)
+            .redirect('/')
+    }
+
+    const newbuyer = await Buyer.create({
+        name:name,
+        email:email,
+        phone:phone,
+        providerAccountId:googleUserId,
+        role:'buyer',
+        password:null,
+        profileImg:picture
+    })
+
+    const accessToken = await generateAccessToken(newbuyer)
+    const refreshToken = await generateRefreshToken(newbuyer.id)
+    const options = {
+        httpOnly: true,
+        secure: true
+    }
+
+    return res.status(200)
+        .cookie('accessToken', accessToken, options)
+        .cookie('refreshToken', refreshToken, options)
+        .json({
+            message: 'Buyer register and login successfully',
+            newbuyer
         })
 })
