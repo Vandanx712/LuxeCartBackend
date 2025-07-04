@@ -140,7 +140,6 @@ export const getGoogleLoginCallback = asynchandller(async(req,res)=>{
     }
 
     const details = decodeIdToken(token.idToken())
-    console.log(details)
 
     const {sub:googleUserId,name,email,phone,picture} = details
 
@@ -157,6 +156,10 @@ export const getGoogleLoginCallback = asynchandller(async(req,res)=>{
         return res.status(200)
             .cookie('accessToken', accessToken, options)
             .cookie('refreshToken', refreshToken, options)
+            .json({
+                message:'Login with google successfully',
+                user
+            })
             .redirect('/')
     }
 
