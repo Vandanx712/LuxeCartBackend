@@ -1,11 +1,14 @@
 import './App.css'
 import Page from './routes/Page'
-import 'flowbite'
+import { Provider } from 'react-redux'
+import store  from './redux/store'
 
 function App() {
   return (
     <>
-      <Page/>
+      <Provider store={store}>
+        <Page />
+      </Provider>
     </>
   )
 }

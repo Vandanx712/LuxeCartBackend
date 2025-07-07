@@ -2,6 +2,23 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&display=swap');
 
+@theme {
+  --color-DeepNavy: #1E3A5F;
+  --color-CharcoalBlack: #121212;
+  --color-richbrown: #4A2C2A;
+  --color-gold: #D4AF37;
+  --color-royalpurple: #5E3A9A;
+  --color-emeraldgreen: #2E7D32;
+  --color-offwhite :#F8F8F8;
+  --color-warmgrey: #A8A29E;
+  --color-deep-navy-dark: #1B1B3A;
+}
+
+@theme {
+  --font-Monrope: 'Manrope';
+  --font-Playfair:'Playfair'
+}
+
 body {
   font-family: 'Manrope', sans-serif;
   background-color: #F8F8F8;
@@ -13,6 +30,8 @@ body {
 }
 
 .scrollbar-hide {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
 }

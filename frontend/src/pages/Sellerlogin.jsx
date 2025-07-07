@@ -4,8 +4,9 @@ import { IoEyeOffOutline, IoEyeOutline, IoMailOutline } from 'react-icons/io5';
 import { FiLock, FiUser } from 'react-icons/fi';
 import {Toaster,toast} from 'react-hot-toast'
 import axios from 'axios'
+import { FaUserTie } from 'react-icons/fa';
 
-const Login = () => {
+const SellerLogin = () => {
     const navigate = useNavigate()
     const [showPassword, setShowPassword] = useState(false);
     const [email,setEmail] = useState('')
@@ -24,10 +25,7 @@ const Login = () => {
             },{withCredentials:true}) 
             setLocalStorage(response.data.user)
             toast.success(response.data.message)
-            const role = response.data.user.role
-            if(role=='buyer') navigate('/')
-            else if(role=='admin') navigate('/adeshboard')
-            else navigate('/dbdeshboard')
+            navigate('/sdeshboard')
         } catch (error) {
             console.log(error)
             toast.error(error.response?.data.message)
@@ -41,22 +39,13 @@ const Login = () => {
         localStorage.setItem('role',user.role)
     }
 
-    const handleGoogleLogin = async() => {
-        try {
-           const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/googlelogin`)
-           window.location.href = response.data.url
-        } catch (error) {
-            console.log(error)
-        }
+    const handleGoogleLogin = () => {
+        
     };
 
     const handleForgotPassword = () => {
         if(!email) toast.error('Please enter email to send otp')
-    };
-
-    const handleBecomeASeller = () => {
-        navigate('/sellerlogin')
-    };
+    }
 
     return (
 
@@ -68,7 +57,7 @@ const Login = () => {
                 {/* Icon & Welcome */}
                 <div className="text-center space-y-4">
                     <div className="mx-auto w-16 h-16 bg-gold rounded-full flex items-center justify-center">
-                        <FiUser className="w-8 h-8 text-white" />
+                        <FaUserTie className="w-8 h-8 text-white" />
                     </div>
                     <p className="text-3xl font-playfair font-bold text-DeepNavy">
                         Welcome Back
@@ -170,20 +159,12 @@ const Login = () => {
                         <span className="font-semibold text-royalpurple">Don't have an account? </span>
                         <button
                             type="button"
-                            onClick={() => navigate('/sellerlogin')}
+                            onClick={() => navigate('')}
                             className="text-sm text-CharcoalBlack hover:text-royalpurple hover:text-[15px] transition-colors"
                         >
                             Sign Up
                         </button>
                     </div>
-
-                    <button
-                        type="button"
-                        onClick={handleBecomeASeller}
-                        className="text-sm bg-gradient-to-l from-gold to-gold/90 text-white px-6 py-2 rounded-full hover:opacity-90 transition-all duration-300 transform hover:scale-105 font-medium"
-                    >
-                        Become a Seller
-                    </button>
                 </div>
             </div>
             <Toaster position="top-center" reverseOrder={false} />
@@ -191,4 +172,4 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default SellerLogin;

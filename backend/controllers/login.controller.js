@@ -7,6 +7,9 @@ import { findUserByEmail } from './common.controller.js';
 import { decodeIdToken, generateCodeVerifier, generateState } from "arctic";
 import { google } from "../services/goolge.js";
 import { Buyer } from "../models/buyer/buyer.model.js";
+import { Coin } from "../models/buyer/coin.model.js";
+import { Cart } from "../models/buyer/cart.model.js";
+import { Wishlist } from "../models/buyer/wishlist.model.js";
 
 dotenv.config()
 
@@ -54,28 +57,9 @@ export const login = asynchandller(async (req, res) => {
     const refreshToken = await generateRefreshToken(user.id)
     const options = {
         httpOnly: true,
-        secure: true
-    }
-
-    if (user.role == 'buyer') {
-        user.populate(['usercoin', 'wishlist', 'cart'])
-        await user.save()
-        return res.status(200)
-            .cookie('accessToken', accessToken, options)
-            .cookie('refreshToken', refreshToken, options)
-            .json({
-                message: 'Login successfully',
-                user: {
-                    username: user.username,
-                    name: user.name || null,
-                    email: user.email,
-                    role: user.role,
-                    profileImg: user.profileImg || null,
-                    usercoin: user.usercoin,
-                    wishlist: user.wishlist,
-                    cart: user.cart
-                }
-            })
+        secure: false,
+        sameSite: 'Lax',
+        maxAge: 24 * 60 * 60 * 1000
     }
 
     return res.status(200)
@@ -84,67 +68,70 @@ export const login = asynchandller(async (req, res) => {
         .json({
             message: 'Login successfully',
             user: {
+                id: user._id,
                 username: user.username,
-                name: user.name || null,
+                name: user.name ?? null,
                 email: user.email,
                 role: user.role,
-                profileImg: user.profileImg || null
+                profileImg: user.profileImg ?? null
             }
         })
 })
 
 //Google login part
-export const getGoolgeLoginpage = asynchandller(async(req,res)=>{
+export const getGoolgeLoginpage = asynchandller(async (req, res) => {
     const state = generateState()
     const codeverifier = generateCodeVerifier()
-    const url = google.createAuthorizationURL(state,codeverifier,[
+    const url = google.createAuthorizationURL(state, codeverifier, [
         'openid',
         'profile',
         'email'
     ])
 
     const cookieConfig = {
-        httpOnly:true,
-        secure:true,
-        maxAge:2*60*1000,
-        sameSite:'lax'
+        httpOnly: true,
+        secure: true,
+        maxAge: 2 * 60 * 1000,
+        sameSite: 'None'
     }
 
-    res.cookie('google_oauth_state',state,cookieConfig)
-    res.cookie('google_code_verifier',codeverifier,cookieConfig)
-    res.redirect(url.toString())
+    res.cookie('google_oauth_state', state, cookieConfig)
+    res.cookie('google_code_verifier', codeverifier, cookieConfig)
+    res.json({
+        url
+    })
 })
 
-export const getGoogleLoginCallback = asynchandller(async(req,res)=>{
-    const {code,state} = req.query
+export const getGoogleLoginCallback = asynchandller(async (req, res) => {
+    const { code, state } = req.query
 
     const {
         google_oauth_state: storedState, //alicename aapyu chhe 
         google_code_verifier: codeVerfier
     } = req.cookies
 
-    if(
+    if (
         !code ||
         !state ||
         !storedState ||
         !codeVerfier ||
         state !== storedState
-    ) throw new ApiError(400,"Couldn't login with Google because of invalid login attempt. Please try again!")
+    ) throw new ApiError(400, "Couldn't login with Google because of invalid login attempt. Please try again!")
 
     let token
     try {
-        token = await google.validateAuthorizationCode(code,codeVerfier)
+        token = await google.validateAuthorizationCode(code, codeVerfier)
     } catch (error) {
         console.log(error)
-        throw new ApiError(400,"Couldn't login with Google because of invalid login attempt. Please try again!")
+        throw new ApiError(400, "Couldn't login with Google because of invalid login attempt. Please try again!")
     }
 
     const details = decodeIdToken(token.idToken())
 
-    const {sub:googleUserId,name,email,phone,picture} = details
+    const { sub: googleUserId, name, email, phone, picture } = details
 
     const user = await findUserByEmail(email)
-    if(user && user.role!=='buyer') throw new ApiError(400,'User already exist for other roles')
+    if (user && user.role !== 'buyer') throw new ApiError(400, 'User already exist for other roles')
 
     if (!user.password && user.providerAccountId) {
         const accessToken = await generateAccessToken(user)
@@ -157,20 +144,20 @@ export const getGoogleLoginCallback = asynchandller(async(req,res)=>{
             .cookie('accessToken', accessToken, options)
             .cookie('refreshToken', refreshToken, options)
             .json({
-                message:'Login with google successfully',
+                message: 'Login with google successfully',
                 user
             })
-            .redirect('/')
+            .redirect('/home')
     }
 
     const newbuyer = await Buyer.create({
-        name:name,
-        email:email,
-        phone:phone,
-        providerAccountId:googleUserId,
-        role:'buyer',
-        password:null,
-        profileImg:picture
+        name: name,
+        email: email,
+        phone: phone,
+        providerAccountId: googleUserId,
+        role: 'buyer',
+        password: null,
+        profileImg: picture
     })
 
     const accessToken = await generateAccessToken(newbuyer)
@@ -187,4 +174,5 @@ export const getGoogleLoginCallback = asynchandller(async(req,res)=>{
             message: 'Buyer register and login successfully',
             newbuyer
         })
+        .redirect('/home')
 })

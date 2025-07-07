@@ -1,9 +1,15 @@
 import { useState, useRef, useEffect } from "react";
 import { FaShoppingCart, FaUser, FaSearch } from "react-icons/fa";
 import { IoHeartOutline, IoNotificationsOutline } from "react-icons/io5";
-import { FiChevronDown, FiLogIn } from "react-icons/fi";
+import { FiLogIn } from "react-icons/fi";
 import { HiOutlineShoppingCart } from "react-icons/hi";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import {useDispatch} from 'react-redux'
+import {setcartitems} from '../../redux/cartslice'
+import CartModal from "../buyer/Cartmodel";
+import toast from "react-hot-toast";
+
 
 const Navbar = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -11,15 +17,17 @@ const Navbar = () => {
   const [isAccount, SetIsAccount] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [wishlist,setWishlist] = useState(0)
+  const [cart,setCart] = useState([])
+  const [cartTotal,setCartTotal] = useState(0)
+  const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   const cartRef = useRef(null);
   const accountRef = useRef(null);
 
-  const toggleCart = () => {
-    setIsCartOpen((prev) => {
-      if (!prev) setIsAccountOpen(false);
-      return !prev;
-    });
+  const closecart = () => {
+    setIsCartOpen(false)
   };
 
   const toggleAccount = () => {
@@ -63,13 +71,34 @@ const Navbar = () => {
     };
   }, []);
 
-  const cartItems = [
-    { id: 1, name: "Apple iPhone 15", price: "$1299", qty: 2 },
-    { id: 2, name: "Apple iPad PRO", price: "$1899", qty: 3 },
-    { id: 3, name: "Apple iPad PRO", price: "$899", qty: 1 },
-    { id: 4, name: "Apple iPhone 15", price: "$999", qty: 1 },
-    { id: 5, name: "Apple Watch", price: "$1099", qty: 2 },
-  ];
+  
+  async function loadWishlist() {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/listproducts`,{withCredentials:true})
+      setWishlist(response.data.wishlistProducts.products.length)
+    } catch (error) {
+      toast.error(error.response)
+      console.log(error)
+    }
+  }
+  
+  async function loadCart() {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/cartproducts`,{withCredentials:true})
+      setCart(response.data.cartProducts.items)
+      setCartTotal(response.data.cartProducts.totalprice)
+      const cartItems = cart.map((item)=>({pid:item.product,vid:item.variant,name:item.productDetails.name,qty:item.quantity,price:item.variantDetails.price,discount_price:item.variantDetails.discount_price,img:item.productDetails.images[0]}))
+      dispatch(setcartitems(cartItems))
+    } catch (error) {
+      toast.error(error.response?.data.message)
+      console.log(error)
+    }
+  }
+  
+  useEffect(()=>{
+    loadCart()
+    loadWishlist()
+  },[])
 
   const accountItems = [
     "My Account",
@@ -82,7 +111,7 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 font-manrope transition-all duration-300 ${isScrolled
+    <nav className={`fixed top-0 left-0 right-0 z-50 font-Monrope transition-all duration-300 ${isScrolled
       ? 'bg-white/9 backdrop-blur-md shadow-lg border-b-0 border-gray-300'
       : 'bg-white'
       }`}>
@@ -90,7 +119,7 @@ const Navbar = () => {
         <div className="flex justify-between lg:h-21 h-17 items-center">
           {/* Logo */}
           <div className="flex items-start">
-            <h1 className="text-2xl lg:text-3xl font-playfair font-bold bg-gradient-to-r from-[#1E3A5F] via-[#5E3A9A] to-[#D4AF37] bg-clip-text text-transparent hover:scale-105 transition-transform duration-300">
+            <h1 className="text-2xl lg:text-3xl font-Playfair font-bold bg-gradient-to-r from-[#1E3A5F] via-[#5E3A9A] to-[#D4AF37] bg-clip-text text-transparent hover:scale-105 transition-transform duration-300">
               LuxeCart
             </h1>
           </div>
@@ -116,7 +145,7 @@ const Navbar = () => {
             <div className="relative">
               <button className="flex items-center text-[#1E3A5F] hover:text-[#D4AF37] transition-all duration-300 hover:scale-105 transform group">
                 <IoHeartOutline size={25} />
-                <span className="absolute -top-1 -right-2 bg-[#D4AF37] text-[#F8F8F8]  w-4 h-4 text-xs rounded-full px-1">6</span>
+                <span className="absolute -top-1 -right-2 bg-[#D4AF37] text-[#F8F8F8]  w-4 h-4 text-xs rounded-full px-1">{wishlist}</span>
               </button>
             </div>
 
@@ -124,31 +153,11 @@ const Navbar = () => {
             <div className="relative" ref={cartRef}>
               <button onClick={() => setIsCartOpen(!isCartOpen)} className="flex items-center text-[#1E3A5F] hover:text-[#D4AF37] transition-all duration-300 hover:scale-105 transform group">
                 <HiOutlineShoppingCart size={25} />
-                <span className="absolute -top-1 -right-2 bg-[#D4AF37] text-[#F8F8F8]  w-4 h-4 text-xs rounded-full px-1">2</span>
+                <span className="absolute -top-1 -right-2 bg-[#D4AF37] text-[#F8F8F8]  w-4 h-4 text-xs rounded-full px-1">{cart.length}</span>
               </button>
 
               {isCartOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white text-gray-900 rounded-lg shadow-lg p-4 z-50">
-                  <h3 className="font-bold mb-2">Your Shopping Cart</h3>
-                  <ul className="space-y-2 max-h-64 overflow-y-auto">
-                    {[...Array(3)].map((_, i) => (
-                      <li key={i} className="flex justify-between items-center">
-                        <span>Apple iPhone 15</span>
-                        <div className="flex items-center space-x-2">
-                          <button className="px-2">-</button>
-                          <span>2</span>
-                          <button className="px-2">+</button>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-4">
-                    <p className="font-semibold">Total: $6,796</p>
-                    <button className="mt-2 w-full bg-[#5E3A9A] text-white py-2 rounded-lg hover:bg-[#4a2c8a]">
-                      See your cart
-                    </button>
-                  </div>
-                </div>
+                <CartModal onClose={closecart} cartTotal={cartTotal}/>
               )}
             </div>
 
@@ -191,15 +200,13 @@ const Navbar = () => {
               )}
             </div>) : (
               <div className="relative">
-                <button className="flex items-center text-[#1E3A5F] hover:text-[#D4AF37] transition-colors duration-300 hover:scale-105 transform group">
+                <button className="flex items-center text-[#1E3A5F] hover:text-[#D4AF37] transition-colors duration-300 hover:scale-105 transform group" onClick={()=>{navigate('/login')}}>
                   <FiLogIn size={25} />
                   <span className=" text-[20px]">Login</span>
                 </button>
               </div>
             )}
-
           </div>
-
         </div>
       </div>
 

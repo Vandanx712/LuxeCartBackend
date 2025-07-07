@@ -204,7 +204,7 @@ export const getAllWishlistProducts = asynchandller(async(req,res)=>{
     ])
     return res.status(200).json({
         message:"Fetch all wishlist products",
-        wishlistProducts
+        wishlistProducts: wishlistProducts[0]
     })
 })
 
@@ -358,7 +358,7 @@ export const getAllCartProducts = asynchandller(async (req, res) => {
 
   return res.status(200).json({
     message: "Fetched all cart products successfully",
-    cartProducts
+    cartProducts:cartProducts[0]
   });
 });
 

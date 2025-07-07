@@ -6,7 +6,7 @@ import { connectDB } from './db/db.js'
 import { handleError } from './utill/apierror.js'
 import defaultData from './db/default.js'
 import rateLimit from 'express-rate-limit'
-
+import cors from 'cors'
 
 dotenv.config()
 const limiter = rateLimit({
@@ -21,6 +21,9 @@ await connectDB()
 await defaultData()
 const app = express()
 
+app.use(cors({origin:process.env.FRONTEND_URL,
+    credentials:true
+}))
 app.use(limiter)
 app.use(express.json())
 app.use(express.urlencoded({extended:true}))
