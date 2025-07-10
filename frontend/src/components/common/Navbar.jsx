@@ -3,23 +3,22 @@ import { FaShoppingCart, FaUser, FaSearch } from "react-icons/fa";
 import { IoHeartOutline, IoNotificationsOutline } from "react-icons/io5";
 import { FiLogIn } from "react-icons/fi";
 import { HiOutlineShoppingCart } from "react-icons/hi";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import {useDispatch} from 'react-redux'
-import {setcartitems} from '../../redux/cartslice'
-import CartModal from "../buyer/Cartmodel";
-import toast from "react-hot-toast";
+import { useDispatch ,useSelector} from 'react-redux'
+import { setcartitems } from '../../redux/cartslice'
 
 
 const Navbar = () => {
+  const cartItems = useSelector(state => state.cart.items)
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [isAccount, SetIsAccount] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [wishlist,setWishlist] = useState(0)
-  const [cart,setCart] = useState([])
-  const [cartTotal,setCartTotal] = useState(0)
+  const [wishlist, setWishlist] = useState(0)
+  const [cart, setCart] = useState(cartItems.length)
+  const [profilepic,setProfilepic] = useState('')
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
@@ -71,44 +70,64 @@ const Navbar = () => {
     };
   }, []);
 
-  
+
   async function loadWishlist() {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/listproducts`,{withCredentials:true})
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/listproducts`, { withCredentials: true })
       setWishlist(response.data.wishlistProducts.products.length)
     } catch (error) {
-      toast.error(error.response)
       console.log(error)
     }
   }
-  
+
   async function loadCart() {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/cartproducts`,{withCredentials:true})
-      setCart(response.data.cartProducts.items)
-      setCartTotal(response.data.cartProducts.totalprice)
-      const cartItems = cart.map((item)=>({pid:item.product,vid:item.variant,name:item.productDetails.name,qty:item.quantity,price:item.variantDetails.price,discount_price:item.variantDetails.discount_price,img:item.productDetails.images[0]}))
-      dispatch(setcartitems(cartItems))
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/cartproducts`, { withCredentials: true })
+      const items = response.data.cartProducts?.items;
+      const total = response.data.cartProducts?.totalprice;
+
+      setCart(items.length ?? 0);
+
+      const cartItems = items.map((item) => {
+        const pid = item.product;
+        const vid = item.variant;
+        const name = item.productDetails.name;
+        const qty = item.quantity;
+        const price = item.variantDetails.price;
+        const discount_price = item.variantDetails.discount_price;
+        const img = item.productDetails.images?.[0] ?? '';
+
+        return {
+          pid,
+          vid,
+          name,
+          qty,
+          price,
+          discount_price,
+          img,
+        };
+      });
+
+      dispatch(setcartitems(cartItems));
     } catch (error) {
-      toast.error(error.response?.data.message)
       console.log(error)
     }
   }
-  
-  useEffect(()=>{
+
+  async function getpic() {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/profilepic/get`,{withCredentials:true})
+      setProfilepic(response.data.profilepic)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  useEffect(() => {
     loadCart()
     loadWishlist()
-  },[])
-
-  const accountItems = [
-    "My Account",
-    "Flowbite",
-    "My Wallet",
-    "My Orders",
-    "Delivery Addresses",
-    "Settings",
-    "Helpdesk",
-  ];
+    getpic()
+  }, [])
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 font-Monrope transition-all duration-300 ${isScrolled
@@ -142,7 +161,7 @@ const Navbar = () => {
 
           {/* Icons */}
           <div className="flex items-center lg:space-x-7 space-x-5">
-            <div className="relative">
+            <div className="relative sm:block hidden">
               <button className="flex items-center text-[#1E3A5F] hover:text-[#D4AF37] transition-all duration-300 hover:scale-105 transform group">
                 <IoHeartOutline size={25} />
                 <span className="absolute -top-1 -right-2 bg-[#D4AF37] text-[#F8F8F8]  w-4 h-4 text-xs rounded-full px-1">{wishlist}</span>
@@ -153,16 +172,16 @@ const Navbar = () => {
             <div className="relative" ref={cartRef}>
               <button onClick={() => setIsCartOpen(!isCartOpen)} className="flex items-center text-[#1E3A5F] hover:text-[#D4AF37] transition-all duration-300 hover:scale-105 transform group">
                 <HiOutlineShoppingCart size={25} />
-                <span className="absolute -top-1 -right-2 bg-[#D4AF37] text-[#F8F8F8]  w-4 h-4 text-xs rounded-full px-1">{cart.length}</span>
+                <span className="absolute -top-1 -right-2 bg-[#D4AF37] text-[#F8F8F8]  w-4 h-4 text-xs rounded-full px-1">{cart}</span>
               </button>
 
               {isCartOpen && (
-                <CartModal onClose={closecart} cartTotal={cartTotal}/>
+                navigate('/buyer/cart')
               )}
             </div>
 
             {isAccount && (
-              <div className="relative">
+              <div className="relative sm:block hidden">
                 <button className="flex items-center text-[#1E3A5F] hover:text-[#D4AF37] transition-colors duration-300 hover:scale-105 transform group">
                   <IoNotificationsOutline size={25} />
                   <span className="absolute -top-1 -right-2 bg-[#D4AF37] text-[#F8F8F8]  w-4 h-4 text-xs rounded-full px-1">6</span>
@@ -174,33 +193,50 @@ const Navbar = () => {
             {isAccount ? (<div className="relative" ref={accountRef}>
               <button onClick={() => setIsAccountOpen(!isAccountOpen)} className="flex items-center text-[#1E3A5F] hover:text-[#D4AF37] transition-all duration-300 hover:scale-105 transform grou">
                 <img
-                  src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
+                  src={profilepic}
                   alt="avatar"
                   className="w-9 h-9 rounded-full"
                 />
               </button>
 
               {isAccountOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-white text-gray-900 rounded-lg shadow-lg p-4 z-50">
-                  <div className="flex items-center space-x-3 mb-4">
+                <div className="absolute right-0 mt-2 w-64 bg-offwhite border border-warmgrey/20 text-charcoalblack rounded-lg shadow-lg p-4 z-50">
+                  <div className="flex items-center space-x-3 mb-4 pb-3 border-b border-warmgrey/20">
+                    <div className="w-10 h-10 bg-royalpurple rounded-full flex items-center justify-center">
+                      {!profilepic && (<span className="text-offwhite font-Playfair font-medium text-sm">JD</span>)}
+                    </div>
                     <div>
-                      <p className="font-bold">Hello, John Doe</p>
-                      <p className="text-sm text-gray-500">john@example.com</p>
+                      <p className="font-Playfair font-medium text-charcoalblack">Hello, John Doe</p>
+                      <p className="text-sm text-warmgrey font-Manrope">john@example.com</p>
                     </div>
                   </div>
                   <ul className="space-y-2">
-                    <li className="hover:underline cursor-pointer">My Account</li>
-                    <li className="hover:underline cursor-pointer">My Orders</li>
-                    <li className="hover:underline cursor-pointer">Settings</li>
-                    <li className="hover:underline cursor-pointer">Favourites</li>
-                    <li className="hover:underline cursor-pointer">Delivery Addresses</li>
-                    <li className="hover:underline cursor-pointer text-red-500">Log Out</li>
+                    <li className="hover:text-royalpurple hover:bg-royalpurple/5 cursor-pointer py-2 px-2 rounded-md transition-colors font-Manrope">
+                      My Account
+                    </li>
+                    <li className="hover:text-royalpurple hover:bg-royalpurple/5 cursor-pointer py-2 px-2 rounded-md transition-colors font-Manrope">
+                      My Orders
+                    </li>
+                    <li className=" sm:hidden hover:text-royalpurple hover:bg-royalpurple/5 cursor-pointer py-2 px-2 rounded-md transition-colors font-Manrope">
+                      Notifications
+                    </li>
+                    <li className=" sm:hidden hover:text-royalpurple hover:bg-royalpurple/5 cursor-pointer py-2 px-2 rounded-md transition-colors font-Manrope">
+                      Favourites
+                    </li>
+                    <li className="hover:text-royalpurple hover:bg-royalpurple/5 cursor-pointer py-2 px-2 rounded-md transition-colors font-Manrope">
+                      Delivery Addresses
+                    </li>
+                    <li className="hover:text-red-600 hover:bg-red-100 cursor-pointer py-2 px-2 rounded-md transition-colors font-Manrope text-red-500">
+                      <Link to={'/login'}>
+                        Log Out
+                      </Link>
+                    </li>
                   </ul>
                 </div>
               )}
             </div>) : (
               <div className="relative">
-                <button className="flex items-center text-[#1E3A5F] hover:text-[#D4AF37] transition-colors duration-300 hover:scale-105 transform group" onClick={()=>{navigate('/login')}}>
+                <button className="flex items-center text-[#1E3A5F] hover:text-[#D4AF37] transition-colors duration-300 hover:scale-105 transform group" onClick={() => { navigate('/login') }}>
                   <FiLogIn size={25} />
                   <span className=" text-[20px]">Login</span>
                 </button>

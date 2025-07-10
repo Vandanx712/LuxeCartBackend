@@ -4,8 +4,6 @@ const initialState = {
     items:[]
 }
 
-console.log(initialState)
-
 const cartSlice = createSlice({
     name:'cart',
     initialState,
@@ -21,10 +19,15 @@ const cartSlice = createSlice({
             const {pid,vid} =action.payload
             state.items = state.items.filter(item => !(item.pid === pid && item.vid === vid))
         },
-        updatequantity:(state,action)=>{
+        addquantity:(state,action)=>{
             const {pid,vid,qty} = action.payload
             const item = state.items.find(i=>i.pid === pid && i.vid === vid)
             if(item) item.qty += qty
+        },
+        removequantity:(state,action)=>{
+            const {pid,vid,qty} = action.payload
+            const item = state.items.find(i=>i.pid === pid && i.vid === vid)
+            if(item) item.qty -= qty
         },
         clearcart:(state,action)=>{
             state.items = []
@@ -35,5 +38,5 @@ const cartSlice = createSlice({
     }
 })
 
-export const {addtocart ,removefromcart, updatequantity, clearcart,setcartitems} =cartSlice.actions
+export const {addtocart ,removefromcart, addquantity,removequantity, clearcart,setcartitems} =cartSlice.actions
 export default cartSlice.reducer
