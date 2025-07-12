@@ -22,32 +22,8 @@ const CartModal = () => {
     async function loadCart() {
         try {
             const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/cartproducts`, { withCredentials: true })
-            const items = response.data.cartProducts?.items;
-            const total = response.data.cartProducts?.totalprice;
-
-            setCart(items);
+            const total = response.data.cartProducts.totalprice;
             setTotalprice(total);
-
-            const cartItems = items.map((item) => {
-                const pid = item.product;
-                const vid = item.variant;
-                const name = item.productDetails.name;
-                const qty = item.quantity;
-                const price = item.variantDetails.price;
-                const discount_price = item.variantDetails.discount_price;
-                const img = item.productDetails.images?.[0] ?? '';
-
-                return {
-                    pid,
-                    vid,
-                    name,
-                    qty,
-                    price,
-                    discount_price,
-                    img,
-                };
-            })
-            setCart(cartItems)
         } catch (error) {
             console.log(error)
         }
@@ -100,7 +76,7 @@ const CartModal = () => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between h-18">
                         <button
-                            onClick={()=>navigate('/')}
+                            onClick={()=>window.history.back()}
                             className="flex items-center space-x-2 text-warmgrey hover:text-CharcoalBlack transition-colors group"
                         >
                             <FiArrowLeft className="h-5 w-5 group-hover:-translate-x-1 transition-transform" />
@@ -114,7 +90,7 @@ const CartModal = () => {
                         <div className="flex items-center space-x-2 text-warmgrey">
                             <FiShoppingBag className="h-5 w-5" />
                             <span className="font-manrope text-sm">
-                                {cart.length} 
+                                {cart.length } 
                             </span>
                             <span className=' hidden sm:block'>{cart.length === 1 ? 'item' : 'items'}</span>
                         </div>
@@ -261,7 +237,7 @@ const CartModal = () => {
                                             Proceed to Checkout
                                         </button>
                                         <button
-                                            onClick={()=>navigate('/')}
+                                            onClick={()=>window.history.back()}
                                             className="w-full border-2 border-warmgrey/30 hover:border-royalpurple text-CharcoalBlack hover:text-royalpurple font-Manrope py-3 text-base rounded-xl transition-all duration-200 hover:bg-royalpurple/5"
                                         >
                                             Continue Shopping

@@ -5,29 +5,24 @@ import { FiLogIn } from "react-icons/fi";
 import { HiOutlineShoppingCart } from "react-icons/hi";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { useDispatch ,useSelector} from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { setcartitems } from '../../redux/cartslice'
-
+import { setlistitems } from "../../redux/wishlist";
 
 const Navbar = () => {
   const cartItems = useSelector(state => state.cart.items)
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [isAccount, SetIsAccount] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [wishlist, setWishlist] = useState(0)
   const [cart, setCart] = useState(cartItems.length)
-  const [profilepic,setProfilepic] = useState('')
+  const [profilepic, setProfilepic] = useState('')
   const navigate = useNavigate()
   const dispatch = useDispatch()
 
   const cartRef = useRef(null);
   const accountRef = useRef(null);
-
-  const closecart = () => {
-    setIsCartOpen(false)
-  };
 
   const toggleAccount = () => {
     setIsAccountOpen((prev) => {
@@ -74,7 +69,25 @@ const Navbar = () => {
   async function loadWishlist() {
     try {
       const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/listproducts`, { withCredentials: true })
-      setWishlist(response.data.wishlistProducts.products.length)
+      const products = response.data.wishlistProducts.products
+      
+      setWishlist(products.length)
+      const wishlistItems = products.map((item) => {
+        const pid = item._id
+        const name = item.name
+        const price = item.price
+        const discount_price = item.discount_price
+        const img = item.images[0]
+
+        return {
+          pid,
+          name,
+          price,
+          discount_price,
+          img
+        }
+      })
+      dispatch(setlistitems(wishlistItems))
     } catch (error) {
       console.log(error)
     }
@@ -84,7 +97,6 @@ const Navbar = () => {
     try {
       const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/cartproducts`, { withCredentials: true })
       const items = response.data.cartProducts?.items;
-      const total = response.data.cartProducts?.totalprice;
 
       setCart(items.length ?? 0);
 
@@ -116,7 +128,7 @@ const Navbar = () => {
 
   async function getpic() {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/profilepic/get`,{withCredentials:true})
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/profilepic/get`, { withCredentials: true })
       setProfilepic(response.data.profilepic)
     } catch (error) {
       console.log(error)
@@ -161,23 +173,21 @@ const Navbar = () => {
 
           {/* Icons */}
           <div className="flex items-center lg:space-x-7 space-x-5">
-            <div className="relative sm:block hidden">
-              <button className="flex items-center text-[#1E3A5F] hover:text-[#D4AF37] transition-all duration-300 hover:scale-105 transform group">
-                <IoHeartOutline size={25} />
-                <span className="absolute -top-1 -right-2 bg-[#D4AF37] text-[#F8F8F8]  w-4 h-4 text-xs rounded-full px-1">{wishlist}</span>
-              </button>
-            </div>
+            {isAccount && (
+              <div className="relative sm:block hidden">
+                <button className="flex items-center text-[#1E3A5F] hover:text-[#D4AF37] transition-all duration-300 hover:scale-105 transform group" onClick={() => navigate('/buyer/wishlist')}>
+                  <IoHeartOutline size={25} />
+                  <span className="absolute -top-1 -right-2 bg-[#D4AF37] text-[#F8F8F8]  w-4 h-4 text-xs rounded-full px-1">{wishlist}</span>
+                </button>
+              </div>
+            )}
 
             {/* Cart */}
             <div className="relative" ref={cartRef}>
-              <button onClick={() => setIsCartOpen(!isCartOpen)} className="flex items-center text-[#1E3A5F] hover:text-[#D4AF37] transition-all duration-300 hover:scale-105 transform group">
+              <button onClick={() =>navigate('/buyer/cart')} className="flex items-center text-[#1E3A5F] hover:text-[#D4AF37] transition-all duration-300 hover:scale-105 transform group">
                 <HiOutlineShoppingCart size={25} />
                 <span className="absolute -top-1 -right-2 bg-[#D4AF37] text-[#F8F8F8]  w-4 h-4 text-xs rounded-full px-1">{cart}</span>
               </button>
-
-              {isCartOpen && (
-                navigate('/buyer/cart')
-              )}
             </div>
 
             {isAccount && (
@@ -199,41 +209,7 @@ const Navbar = () => {
                 />
               </button>
 
-              {isAccountOpen && (
-                <div className="absolute right-0 mt-2 w-64 bg-offwhite border border-warmgrey/20 text-charcoalblack rounded-lg shadow-lg p-4 z-50">
-                  <div className="flex items-center space-x-3 mb-4 pb-3 border-b border-warmgrey/20">
-                    <div className="w-10 h-10 bg-royalpurple rounded-full flex items-center justify-center">
-                      {!profilepic && (<span className="text-offwhite font-Playfair font-medium text-sm">JD</span>)}
-                    </div>
-                    <div>
-                      <p className="font-Playfair font-medium text-charcoalblack">Hello, John Doe</p>
-                      <p className="text-sm text-warmgrey font-Manrope">john@example.com</p>
-                    </div>
-                  </div>
-                  <ul className="space-y-2">
-                    <li className="hover:text-royalpurple hover:bg-royalpurple/5 cursor-pointer py-2 px-2 rounded-md transition-colors font-Manrope">
-                      My Account
-                    </li>
-                    <li className="hover:text-royalpurple hover:bg-royalpurple/5 cursor-pointer py-2 px-2 rounded-md transition-colors font-Manrope">
-                      My Orders
-                    </li>
-                    <li className=" sm:hidden hover:text-royalpurple hover:bg-royalpurple/5 cursor-pointer py-2 px-2 rounded-md transition-colors font-Manrope">
-                      Notifications
-                    </li>
-                    <li className=" sm:hidden hover:text-royalpurple hover:bg-royalpurple/5 cursor-pointer py-2 px-2 rounded-md transition-colors font-Manrope">
-                      Favourites
-                    </li>
-                    <li className="hover:text-royalpurple hover:bg-royalpurple/5 cursor-pointer py-2 px-2 rounded-md transition-colors font-Manrope">
-                      Delivery Addresses
-                    </li>
-                    <li className="hover:text-red-600 hover:bg-red-100 cursor-pointer py-2 px-2 rounded-md transition-colors font-Manrope text-red-500">
-                      <Link to={'/login'}>
-                        Log Out
-                      </Link>
-                    </li>
-                  </ul>
-                </div>
-              )}
+              {isAccountOpen && navigate('/buyer')}
             </div>) : (
               <div className="relative">
                 <button className="flex items-center text-[#1E3A5F] hover:text-[#D4AF37] transition-colors duration-300 hover:scale-105 transform group" onClick={() => { navigate('/login') }}>

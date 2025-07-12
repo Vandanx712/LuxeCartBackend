@@ -202,9 +202,15 @@ export const getAllWishlistProducts = asynchandller(async(req,res)=>{
             }
         }
     ])
+
+    let wishlist
+    if (wishlistProducts.length == 0) {
+        wishlist = await Cart.findOne({ buyer: buyerId })
+    }
+
     return res.status(200).json({
         message:"Fetch all wishlist products",
-        wishlistProducts: wishlistProducts[0]
+        wishlistProducts: wishlistProducts.length === 0 ? wishlist : wishlistProducts[0]
     })
 })
 
@@ -355,10 +361,15 @@ export const getAllCartProducts = asynchandller(async (req, res) => {
       }
     }
   ]);
+  
+  let cart
+  if(cartProducts.length===0) {
+    cart = await Cart.findOne({buyer:buyerId})
+  }
 
   return res.status(200).json({
     message: "Fetched all cart products successfully",
-    cartProducts:cartProducts[0]
+    cartProducts:cartProducts.length==0 ? cart : cartProducts[0]
   });
 });
 
