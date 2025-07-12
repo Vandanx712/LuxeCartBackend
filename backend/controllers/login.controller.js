@@ -7,9 +7,6 @@ import { findUserByEmail } from './common.controller.js';
 import { decodeIdToken, generateCodeVerifier, generateState } from "arctic";
 import { google } from "../services/goolge.js";
 import { Buyer } from "../models/buyer/buyer.model.js";
-import { Coin } from "../models/buyer/coin.model.js";
-import { Cart } from "../models/buyer/cart.model.js";
-import { Wishlist } from "../models/buyer/wishlist.model.js";
 
 dotenv.config()
 

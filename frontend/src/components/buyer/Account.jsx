@@ -1,32 +1,97 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { FiUser, FiPackage, FiBell, FiHeart, FiMapPin, FiLogOut, FiMenu, FiX } from 'react-icons/fi';
+import { Link ,useNavigate} from 'react-router-dom';
+import { FiUser, FiPackage, FiBell, FiHeart, FiMapPin, FiLogOut, FiMenu, FiX, FiShoppingCart } from 'react-icons/fi';
 import axios from 'axios';
+import { FaCoins } from 'react-icons/fa';
+import { toast,Toaster } from 'react-hot-toast';
 
 
 const AccountPage = () => {
     const [activeSection, setActiveSection] = useState('My Account');
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [buyer, setBuyer] = useState({})
+    const [coins,setCoins] = useState(0)
+    const [address,setAddress] = useState()
+    const [username,setUsername] = useState(buyer.username)
+    const [name,setName] = useState(buyer.name)
+    const [email,setEmail] = useState(buyer.email)
+    const [contactNo,setContactNo] = useState(buyer.phone)
+    const [hideButton,setHideButton] = useState(true)
+    const navigate = useNavigate()
 
     const menuItems = [
         { name: 'My Account', icon: FiUser },
         { name: 'My Orders', icon: FiPackage },
+        { name: 'My Coins', icon:FaCoins},
         { name: 'Notifications', icon: FiBell },
+        { name: 'Cart', icon:FiShoppingCart},
         { name: 'Favourites', icon: FiHeart },
         { name: 'Delivery Addresses', icon: FiMapPin },
     ];
 
     useEffect(() => {
         loadBuyer()
+        loadCoin()
+        loadAddress()
     }, [])
     async function loadBuyer() {
         try {
             const id = localStorage.getItem('id')
             const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/get/${id}`, { withCredentials: true })
             setBuyer(response.data.buyer)
+            setUsername(response.data.buyer.username)
+            setName(response.data.buyer.name)
+            setEmail(response.data.buyer.email)
+            setContactNo(response.data.buyer.phone)
         } catch (error) {
             console.log(error)
+        }
+    }
+    async function loadCoin() {
+        try {
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/getcoin`,{withCredentials:true})
+            setCoins(response.data.coins.coincount)
+        } catch (error) {
+            console.log(error)
+        }
+    }
+    async function loadAddress() {
+        try {
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/getallAddress`,{withCredentials:true})
+            const Address = response.data.addresses.map((add)=>{
+                const id = add._id
+                const street = add.street
+                const city = add.city
+                const state = add.state
+                const pincode = add.zip_code
+                const Default = add.is_default
+
+                return {id,street,city,state,pincode,Default}
+            })
+            setAddress(Address)
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    async function updateUser() {
+        const emailvalid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if ( emailvalid.test(email) === false ) toast.error('Plz enter valid email')
+        else {
+            try {
+                const response = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/updateprofile`, {
+                    username: username,
+                    name: name,
+                    email: email,
+                    phone: contactNo
+                },{withCredentials:true})
+                toast.success(response.data.message)
+                setBuyer(response.data.updatedBuyer)
+                setHideButton(true)
+            } catch (error) {
+                toast.error(error.response?.data.message)
+                console.log(error)
+            }
         }
     }
 
@@ -41,13 +106,13 @@ const AccountPage = () => {
                                 {buyer.profileImg && (
                                     <div className='w-17 h-17 rounded-full flex items-center border border-warmgrey/20'>
                                         <img
-                                            src={buyer.profileImg}
+                                            src={buyer.profileImg.url}
                                         />
                                     </div>
                                 )}
                                 {!buyer.profileImg && (
                                     <div className="w-17 h-17 bg-royalpurple rounded-full flex items-center justify-center">
-                                        <span className="text-offwhite font-Playfair font-medium text-xl">{buyer.name}</span>
+                                        <span className="text-offwhite font-Playfair font-medium text-xl">{buyer?.name?.length > 0 ? buyer.name[0] : ''}</span>
                                     </div>
                                 )}
                                 <div>
@@ -55,48 +120,71 @@ const AccountPage = () => {
                                     <p className="text-gray-500 font-Manrope">{buyer.email}</p>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-1 gap-4">
+                            <div className=" flex-col space-y-5">
                                 <div>
                                     <label className="block text-sm font-Manrope text-CharcoalBlack mb-2">Username</label>
                                     <input
                                         type="text"
-                                        defaultValue={buyer.username}
+                                        value={username}
+                                        onChange={(e) => {
+                                            setHideButton(false)
+                                            const newValue = e.target.value;
+                                            setUsername(newValue.trim());
+                                            setHideButton(newValue === buyer.username);
+                                        }}
                                         className="w-full px-3 py-2 border bg-white border-warmgrey/30 rounded-md font-Manrope focus:outline-none focus:border-royalpurple"
                                     />
                                 </div>
-                                <div className="md:col-span-2">
+                                <div className="">
                                     <label className="block text-sm font-Manrope text-CharcoalBlack mb-2">Name</label>
                                     <input
                                         type="text"
-                                        defaultValue={buyer.name}
+                                        value={name}
+                                        onChange={(e) => {
+                                            setHideButton(false)
+                                            const newValue = e.target.value;
+                                            setName(newValue.trim());
+                                            setHideButton(newValue === buyer.name);
+                                        }}
                                         className="w-full px-3 py-2 border bg-white border-warmgrey/30 rounded-md font-Manrope focus:outline-none focus:border-royalpurple"
                                     />
                                 </div>
-                                <div className="md:col-span-2">
+                                <div className="">
                                     <label className="block text-sm font-Manrope text-CharcoalBlack mb-2">Email</label>
                                     <input
-                                        type="email"
-                                        defaultValue={buyer.email}
+                                        type="text"
+                                        value={email}
+                                        onChange={(e) => {
+                                            setHideButton(false)
+                                            const newValue = e.target.value;
+                                            setEmail(newValue);
+                                            console.log(e.target.value,'target')
+                                            setHideButton(newValue === buyer.email);
+                                        }}
                                         className="w-full px-3 py-2 border bg-white border-warmgrey/30 rounded-md font-Manrope focus:outline-none focus:border-royalpurple"
                                     />
                                 </div>
-                                <div className="md:col-span-2">
+                                <div className="">
                                     <label className="block text-sm font-Manrope text-CharcoalBlack mb-2">Phone No</label>
                                     <input
                                         type='text'
-                                        defaultValue={buyer.phone}
+                                        value={contactNo}
                                         className="w-full px-3 py-2 border bg-white border-warmgrey/30 rounded-md font-Manrope focus:outline-none focus:border-royalpurple"
                                         onChange={(e) => {
+                                            setHideButton(false)
                                             const onlyDigits = e.target.value.replace(/\D/g, '');
                                             const limitedDigits = onlyDigits.slice(0, 10);
-                                            // setContactNo(limitedDigits);
+                                            setContactNo(Number(limitedDigits.trim()));
+                                            setHideButton( limitedDigits == buyer.phone);
                                         }}
                                     />
                                 </div>
                             </div>
-                            <button className="mt-6 w-full bg-royalpurple hover:bg-royalpurple/90 text-white font-Manrope px-6 py-2 rounded-md transition-colors">
-                                Save Changes
-                            </button>
+                            {!hideButton && (
+                                <button className="mt-6 w-full bg-royalpurple hover:bg-royalpurple/90 text-white font-Manrope px-6 py-2 rounded-md transition-colors" onClick={updateUser}>
+                                    Save Changes
+                                </button>
+                            )}
                         </div>
                     </div>
                 );
@@ -131,6 +219,21 @@ const AccountPage = () => {
                     </div>
                 );
 
+            case 'My Coins':
+                return(
+                    <div className="max-w-2xl">
+                        <h2 className="text-2xl font-Playfair font-medium text-CharcoalBlack mb-6">My Coins</h2>
+                        <div className="space-y-4">
+                            <div className="p-4">
+                                <div className="flex items-center space-x-7 p-3 text-3xl">
+                                    <img src='/coin.png' className=' h-10 w-10 animate-bounce' />
+                                    <p className=" text-royalpurple/90 font-Playfair">{coins} Coins</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+
             case 'Notifications':
                 return (
                     <div className="max-w-2xl">
@@ -150,24 +253,16 @@ const AccountPage = () => {
                         </div>
                     </div>
                 );
+            
+
+            case 'Cart':
+                return (
+                    navigate('/buyer/cart')
+                );
 
             case 'Favourites':
                 return (
-                    <div className="max-w-4xl">
-                        <h2 className="text-2xl font-Playfair font-medium text-CharcoalBlack mb-6">Favourites</h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                            {[1, 2, 3].map((item) => (
-                                <div key={item} className="bg-offwhite rounded-lg p-4 border border-warmgrey/20">
-                                    <div className="w-full h-48 bg-warmgrey/20 rounded-lg mb-4"></div>
-                                    <h3 className="font-Manrope text-CharcoalBlack mb-2">Favorite Item {item}</h3>
-                                    <p className="font-Playfair font-medium text-CharcoalBlack">${(item * 25.99).toFixed(2)}</p>
-                                    <button className="w-full mt-3 bg-royalpurple hover:bg-royalpurple/90 text-white font-Manrope py-2 rounded-md transition-colors">
-                                        Add to Cart
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
+                    navigate('/buyer/wishlist')
                 );
 
             case 'Delivery Addresses':
@@ -175,18 +270,23 @@ const AccountPage = () => {
                     <div className="max-w-2xl">
                         <h2 className="text-2xl font-Playfair font-medium text-CharcoalBlack mb-6">Delivery Addresses</h2>
                         <div className="space-y-4 mb-6">
-                            {[1, 2].map((address) => (
-                                <div key={address} className="bg-offwhite rounded-lg p-4 border border-warmgrey/20">
-                                    <div className="flex items-start justify-between">
+                            {address.map((address,index) => (
+                                <div key={address.id} className="bg-offwhite rounded-lg p-4 border border-warmgrey/20">
+                                    <div className="flex items-center justify-evenly text-pretty space-y-3">
                                         <div>
-                                            <h3 className="font-Playfair font-medium text-CharcoalBlack">Home Address {address}</h3>
-                                            <p className="text-warmgrey font-Manrope mt-1">
-                                                123 Main Street, Apt {address}<br />
-                                                City, State 12345<br />
-                                                United States
+                                            <h3 className="font-Playfair text-xl font-medium text-CharcoalBlack">Home Address - {index+1}</h3>
+                                            <p className="text-gray-500 font-Manrope mt-5 mb-2">
+                                                {address.street} <br />
+                                                {address.city}, {address.state} - {address.pincode} <br />
+                                                India
                                             </p>
+                                            {!address.Default && (
+                                                <span className="bg-royalpurple/10 text-royalpurple px-3 py-1 rounded-full text-sm font-Manrope">
+                                                    Default Address
+                                                </span>
+                                            )}
                                         </div>
-                                        <button className="text-royalpurple hover:text-royalpurple/80 font-Manrope text-sm transition-colors">
+                                        <button className="text-royalpurple hover:text-royalpurple/50 font-Manrope text-lg transition-colors">
                                             Edit
                                         </button>
                                     </div>
@@ -235,17 +335,17 @@ const AccountPage = () => {
                             {buyer.profileImg && (
                                 <div className='w-17 h-17 rounded-full flex items-center border border-warmgrey/20'>
                                     <img
-                                        src={buyer.profileImg}
+                                        src={buyer.profileImg.url}
                                     />
                                 </div>
                             )}
                             {!buyer.profileImg && (
                                 <div className="w-17 h-17 bg-royalpurple rounded-full flex items-center justify-center">
-                                    <span className="text-offwhite font-Playfair font-medium text-xl">{buyer.name}</span>
+                                    <span className="text-offwhite font-Playfair font-medium text-xl">{buyer?.name?.length > 0 ? buyer.name[0] : ''}</span>
                                 </div>
                             )}
                             <div>
-                                <p className="font-Playfair font-medium text-CharcoalBlack">Hello, {buyer.username}</p>
+                                <p className="font-Playfair font-medium text-CharcoalBlack">Hello, {buyer.name}</p>
                                 <p className="text-sm text-gray-500 font-Manrope">{buyer.email}</p>
                             </div>
                         </div>
@@ -300,6 +400,7 @@ const AccountPage = () => {
                     </div>
                 </div>
             </div>
+            <Toaster position="top-center" reverseOrder={false} />
         </div>
     );
 };

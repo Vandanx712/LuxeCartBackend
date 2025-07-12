@@ -4,8 +4,7 @@ import mongoose from "mongoose";
 const addressSchema = new mongoose.Schema(
     {
         user: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User"
+            type: mongoose.Schema.Types.String,
         },
         userType: {
             type: mongoose.Schema.Types.String

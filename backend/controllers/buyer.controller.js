@@ -86,14 +86,14 @@ export const updateBuyer = asynchandller(async (req, res) => {
     const user = await findUserByEmail(email)
 
     if (existbuyer) {
-        if (username === existbuyer.username) throw new ApiError(400, 'Username already exist')
-        if (email === existbuyer.email) throw new ApiError(400, 'Email already exist')
-        if (phone === existbuyer.phone) throw new ApiError(400, 'PhoneNo already exist')
+        if (username === existbuyer.username && existbuyer.id !== buyerId) throw new ApiError(400, 'Username already exist')
+        if (email === existbuyer.email && existbuyer.id !== buyerId) throw new ApiError(400, 'Email already exist')
+        if (phone === existbuyer.phone && existbuyer.id !== buyerId) throw new ApiError(400, 'PhoneNo already exist')
     }
 
-    if(user) throw new ApiError(429,'Email already exist')
+    if(user.id !== buyerId) throw new ApiError(429,'Email already exist')
 
-    const updatedBuyer = await Buyer.findByIdAndUpdate(buyerId, { $set: { username,name, email, phone } },{new:true})
+    const updatedBuyer = await Buyer.findByIdAndUpdate(buyerId, { $set: { username,name, email, phone } },{new:true}).select('-password')
 
     return res.status(200).json({
         message: 'Buyer profile update successfully',
@@ -113,6 +113,18 @@ export const getBuyerbyId = asynchandller(async(req,res)=>{
     return res.status(200).json({
         message:'Fetch Buyer successfully',
         buyer
+    })
+})
+
+export const getBuyerCoin = asynchandller(async(req,res)=>{
+    const buyerId = req.user.id
+
+    const coins = await Coin.findOne({buyer:buyerId})
+    if(!coins) throw new ApiError(404,"Coins not found")
+
+    return res.status(200).json({
+        message:'Fetch buyer coin successfully',
+        coins
     })
 })
 

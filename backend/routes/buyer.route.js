@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addProductInCart, addProductInWishlist, createOrderForSingle, createOrderFromCart, getAllCartProducts, getAllWishlistProducts, getBuyerbyId, getCartById, getListById, registerBuyer, removeProductfromCart, removeProductfromWishlist, updateBuyer, verifyPayment } from "../controllers/buyer.controller.js";
+import { addProductInCart, addProductInWishlist, createOrderForSingle, createOrderFromCart, getAllCartProducts, getAllWishlistProducts, getBuyerbyId, getBuyerCoin, getCartById, getListById, registerBuyer, removeProductfromCart, removeProductfromWishlist, updateBuyer, verifyPayment } from "../controllers/buyer.controller.js";
 import { verifyjwt } from "../middlewares/verifyjwt.js";
 
 
@@ -10,6 +10,7 @@ const buyerRoute = Router()
 buyerRoute.route('/register').post(registerBuyer)
 buyerRoute.route('/updateprofile').put(verifyjwt,updateBuyer)
 buyerRoute.route('/get/:buyerId').get(verifyjwt,getBuyerbyId)
+buyerRoute.route('/getcoin').get(verifyjwt,getBuyerCoin)
 
 // wishlist part
 buyerRoute.route('/addonwishlist/:productId').post(verifyjwt,addProductInWishlist)
