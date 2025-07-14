@@ -50,10 +50,10 @@ const buyerSchema = new mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         ref:'Cart'
     },
-    orders:{
+    orders:[{
         type:mongoose.Schema.Types.ObjectId,
         ref:'Order'
-    }
+    }]
 },{timestamps:true})
 
 

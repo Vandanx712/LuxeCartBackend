@@ -95,12 +95,12 @@ export const updateSeller = asynchandller(async (req, res) => {
     const user = await findUserByEmail(email)
 
     if (existSeller) {
-        if (username === existSeller.username) throw new ApiError(400, 'Username already exist')
-        if (email === existSeller.email) throw new ApiError(400, 'Email already exist')
-        if (phone === existSeller.phone) throw new ApiError(400, 'PhoneNo already exist')
+        if (username === existSeller.username && existSeller.id !== sellerId) throw new ApiError(400, 'Username already exist')
+        if (email === existSeller.email && existSeller.id !== sellerId) throw new ApiError(400, 'Email already exist')
+        if (phone === existSeller.phone && existSeller.id !== sellerId) throw new ApiError(400, 'PhoneNo already exist')
     }
 
-    if (user) throw new ApiError(429, 'Email already exist')
+    if (user.id !== sellerId) throw new ApiError(429, 'Email already exist')
 
     const updatedSeller = await Seller.findByIdAndUpdate(sellerId, { $set: { email, username, name, phone, shopname } },{new:true})
     if(!updatedSeller) throw new ApiError(404,'Seller not found')

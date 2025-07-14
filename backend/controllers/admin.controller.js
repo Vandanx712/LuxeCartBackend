@@ -10,12 +10,13 @@ import path from "path";
 
 export const updateAdmin = asynchandller(async(req,res)=>{
     const {username,email} = req.body
+    const adminId= req.user.id
 
     const admin = await Admin.findOne(email)
     if(!admin) throw new ApiError(404,'Admin not found')
 
     const check = await findUserByEmail(email)
-    if(check) throw new ApiError(400,'Email already exist')
+    if(check.id !== adminId) throw new ApiError(400,'Email already exist')
 
     const updatedAdmin = await Admin.findByIdAndUpdate(admin.id,{$set:{username,email}},{new:true})
 
