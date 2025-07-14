@@ -233,25 +233,31 @@ export const addProductInCart = asynchandller(async (req, res) => {
     const { productId, variantId, quantity } = req.body
     const buyerId = req.user.id
 
-    const [product, variant, cart] = await Promise.all([
-        Product.findById(productId).select('_id name'),
-        ProductVariant.findById(variantId).select('_id variant_name discount_price'),
+    const [product,cart] = await Promise.all([
+        Product.findById(productId).select('_id name variants'),
         Cart.findOne({ buyer: buyerId })
     ])
-    if (!product || !variant) throw new ApiError(404, "Product or variant not found")
+    
+    if (!product) throw new ApiError(404, "Product not found")
+    const variant = await ProductVariant.findById(variantId ?? product.variants[0].toString()).select('_id variant_name discount_price')
 
-    const existingitem = cart.items.find(item => item.product.toString() === productId && item.variant.toString() === variantId)
+
+    let totalprice = cart.totalprice
+    const existingitem = cart.items.find(item => item.product.toString() === productId && item.variant.toString() === variant.id)
     if (existingitem) {
         existingitem.quantity += quantity
+        totalprice += variant.discount_price * quantity
     }
     else {
-        cart.items.push({ product: productId, variant: variantId, quantity: quantity })
+        cart.items.push({ product: productId, variant: variant.id, quantity: quantity })
+        totalprice += variant.discount_price * quantity
     }
-    cart.totalprice += variant.discount_price * quantity
+    cart.totalprice = totalprice
     await cart.save()
     return res.status(200).json({
         message: 'Product add successfully',
-        cart
+        cart,
+        variantId:variant.id
     })
 }) // aaj api jyare buyer cart ma jaine quantity decrease kare tyare pan aaj api use thase
 

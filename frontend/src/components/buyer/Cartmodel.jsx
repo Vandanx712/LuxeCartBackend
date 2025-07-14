@@ -12,7 +12,6 @@ const CartModal = () => {
     const navigate = useNavigate()
     const [totalprice, setTotalprice] = useState(0)
     const [cart, setCart] = useState(cartItems)
-    const [qty, setqty] = useState(1)
 
     const shippingNote = "Shipping and taxes calculated at checkout.";
     useEffect(()=>{
@@ -23,6 +22,27 @@ const CartModal = () => {
         try {
             const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/cartproducts`, { withCredentials: true })
             const total = response.data.cartProducts.totalprice;
+            const items = response.data.cartProducts?.items;
+            const cartitems = items.map((item) => {
+                const pid = item.product;
+                const vid = item.variant;
+                const name = item.productDetails.name;
+                const qty = item.quantity;
+                const price = item.variantDetails.price;
+                const discount_price = item.variantDetails.discount_price;
+                const img = item.productDetails.images?.[0] ?? '';
+
+                return {
+                    pid,
+                    vid,
+                    name,
+                    qty,
+                    price,
+                    discount_price,
+                    img,
+                };
+            });
+            setCart(cartitems)
             setTotalprice(total);
         } catch (error) {
             console.log(error)
@@ -35,35 +55,42 @@ const CartModal = () => {
             setTotalprice(response.data.cart.totalprice)
             setCart(cart.filter((item) => item.pid !== pid && item.vid !== vid))
             dispatch(setcartitems(cart))
+            toast.success(response.data.message)
         } catch (error) {
             console.log(error)
         }
     }
-
-    async function increaseQty(pid, vid, index) {
+    async function increaseQty(pid, vid) {
         try {
             const response = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/addoncart`, {
                 productId: pid,
                 variantId: vid,
                 quantity: 1
             }, { withCredentials: true })
-            setqty(qty + 1)
             setTotalprice(response.data.cart.totalprice)
+            setCart(prevItems =>
+                prevItems.map(item =>
+                    item.pid === pid && item.vid === vid ? { ...item, qty: item.qty+1 } : item
+                )
+            )
         } catch (error) {
             console.log(error)
         }
     }
-
-    async function decreaseQty(pid, vid, index) {
-        if(qty===1) return
+    async function decreaseQty(pid, vid, qty) {
+        if(qty===1) removeItem(pid,vid)
         try {
             const response = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/addoncart`, {
                 productId: pid,
                 variantId: vid,
                 quantity: -1
             }, { withCredentials: true })
-            setqty(qty - 1)
             setTotalprice(response.data.cart.totalprice)
+            setCart(prevItems =>
+                prevItems.map(item =>
+                    item.pid === pid && item.vid === vid ? { ...item, qty: item.qty - 1 } : item
+                )
+            )
         } catch (error) {
             console.log(error)
         }
@@ -88,7 +115,7 @@ const CartModal = () => {
                         </h1>
 
                         <div className="flex items-center space-x-2 text-warmgrey">
-                            <FiShoppingBag className="h-5 w-5" />
+                            <FiShoppingBag className={`h-5 w-5 ${cart.length > 0 ? 'animate-bounce' : ''}`}/>
                             <span className="font-manrope text-sm">
                                 {cart.length } 
                             </span>
@@ -145,7 +172,6 @@ const CartModal = () => {
                                                     <div className="h-24 w-24 sm:h-28 sm:w-28 flex-shrink-0 overflow-hidden rounded-xl border border-warmgrey/20 bg-offwhite shadow-sm">
                                                         <img
                                                             src={item.img}
-                                                            alt={item.name}
                                                             className="h-full w-full object-cover object-center group-hover:scale-105 transition-transform duration-200"
                                                         />
                                                     </div>
@@ -168,16 +194,16 @@ const CartModal = () => {
                                                             <span className="text-sm text-warmgrey font-Manrope">Quantity</span>
                                                             <div className="flex items-center space-x-2 bg-offwhite rounded-lg p-1">
                                                                 <button
-                                                                    onClick={() => decreaseQty(item.pid, item.vid, index)}
+                                                                    onClick={() => decreaseQty(item.pid, item.vid,item.qty)}
                                                                     className="h-8 w-8 rounded-md text-CharcoalBlack hover:text-royalpurple text-sm font-semibold hover:bg-white transition-all duration-150 flex items-center justify-center"
                                                                 >
                                                                     −
                                                                 </button>
                                                                 <span className="text-sm font-medium text-CharcoalBlack px-3 py-1 bg-white rounded-md min-w-[2rem] text-center">
-                                                                    {qty}
+                                                                    {item.qty}
                                                                 </span>
                                                                 <button
-                                                                    onClick={() => increaseQty(item.pid, item.vid, index)}
+                                                                    onClick={() => increaseQty(item.pid,item.vid)}
                                                                     className="h-8 w-8 rounded-md text-CharcoalBlack hover:text-royalpurple text-sm font-semibold hover:bg-white transition-all duration-150 flex items-center justify-center"
                                                                 >
                                                                     +
@@ -196,11 +222,11 @@ const CartModal = () => {
                                                 </div>
                                                 <div className="text-right space-y-1 sm:ml-4">
                                                     <p className={`text-lg font-sans ${item.discount_price ? 'line-through text-warmgrey' : 'text-CharcoalBlack font-medium'}`}>
-                                                        ${(item.price * qty).toFixed(2)}
+                                                        ${(item.price * item.qty).toFixed(2)}
                                                     </p>
                                                     {item.discount_price && (
                                                         <p className="text-lg text-CharcoalBlack font-Manrope font-medium">
-                                                            ${(item.discount_price * qty).toFixed(2)}
+                                                            ${(item.discount_price * item.qty).toFixed(2)}
                                                         </p>
                                                     )}
                                                 </div>

@@ -6,17 +6,62 @@ import { toast, Toaster } from 'react-hot-toast'
 
 function Wishlist() {
     const wishlistitems = useSelector(state => state.list.items)
+    const dispatch = useDispatch()
     const [wishlist, setWishlist] = useState(wishlistitems)
+    const [listId,setListId] = useState(0)
 
     useEffect(() => {
+        loadlist()
     }, [])
 
-    async function removeFromList() {
-        
+    async function loadlist() {
+        try {
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/listproducts`, { withCredentials: true })
+            const products = response.data.wishlistProducts.products
+
+            const wishlistItems = products.map((item) => {
+                const pid = item._id
+                const name = item.name
+                const price = item.price
+                const discount_price = item.discount_price
+                const img = item.images[0]
+
+                return {
+                    pid,
+                    name,
+                    price,
+                    discount_price,
+                    img
+                }
+            })
+            setListId(response.data.wishlistProducts._id)
+            setWishlist(wishlistItems)
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    async function removeFromList(pid) {
+        try {
+            const response = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/removeonwishlist/${pid}/${listId}`,{},{withCredentials:true})
+            setWishlist(wishlist.filter((item)=>item.pid !== pid))
+            toast.success(response.data.message)
+        } catch (error) {
+            console.log(error)
+        }
     }
 
     async function addToCart(item) {
-        
+        try {
+            const response = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/addoncart`,{
+                productId:item.pid,
+                variantId:null,
+                quantity:1
+            },{withCredentials:true})
+            toast.success(response.data.message)
+        } catch (error) {
+            console.log(error)
+        }
     }
 
     return (
@@ -89,17 +134,9 @@ function Wishlist() {
                                             />
                                         </div>
 
-                                        {/* Remove from Favorites Button */}
-                                        <button
-                                            onClick={() => removeFromFavorites(item.pid, item.vid)}
-                                            className="absolute top-3 right-3 h-10 w-10 bg-white/90 hover:bg-white rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-all duration-200"
-                                        >
-                                            <FiX className="h-4 w-4 text-CharcoalBlack" />
-                                        </button>
-
                                         {/* Favorite Heart Indicator */}
                                         <div className="absolute top-3 left-3 h-10 w-10 bg-royalpurple rounded-full flex items-center justify-center shadow-sm">
-                                            <FiHeart className="h-4 w-4 text-white fill-current" />
+                                            <FiHeart className="h-4 w-4 text-white fill-current animate-pulse" />
                                         </div>
                                     </div>
 
@@ -131,7 +168,7 @@ function Wishlist() {
                                                 <span>Add to Cart</span>
                                             </button>
                                             <button
-                                                onClick={() => removeFromList(item.pid, item.vid)}
+                                                onClick={() => removeFromList(item.pid)}
                                                 className="w-full border-2 border-warmgrey/30 hover:border-royalpurple text-CharcoalBlack hover:text-royalpurple font-Manrope py-3 text-base rounded-xl transition-all duration-200 hover:bg-royalpurple/5 flex items-center justify-center space-x-2"
                                             >
                                                 <FiHeart className="h-4 w-4" />

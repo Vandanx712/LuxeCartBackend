@@ -3,23 +3,21 @@ import { FaShoppingCart, FaUser, FaSearch } from "react-icons/fa";
 import { IoHeartOutline, IoNotificationsOutline } from "react-icons/io5";
 import { FiLogIn } from "react-icons/fi";
 import { HiOutlineShoppingCart } from "react-icons/hi";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useDispatch, useSelector } from 'react-redux'
-import { setcartitems } from '../../redux/cartslice'
-import { setlistitems } from "../../redux/wishlist";
 
 const Navbar = () => {
   const cartItems = useSelector(state => state.cart.items)
+  const listItems = useSelector(state => state.list.items)
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [isAccount, SetIsAccount] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [wishlist, setWishlist] = useState(0)
+  const [wishlist, setWishlist] = useState(listItems.length)
   const [cart, setCart] = useState(cartItems.length)
   const [profilepic, setProfilepic] = useState('')
   const navigate = useNavigate()
-  const dispatch = useDispatch()
 
   const cartRef = useRef(null);
   const accountRef = useRef(null);
@@ -70,24 +68,7 @@ const Navbar = () => {
     try {
       const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/listproducts`, { withCredentials: true })
       const products = response.data.wishlistProducts.products
-      
       setWishlist(products.length)
-      const wishlistItems = products.map((item) => {
-        const pid = item._id
-        const name = item.name
-        const price = item.price
-        const discount_price = item.discount_price
-        const img = item.images[0]
-
-        return {
-          pid,
-          name,
-          price,
-          discount_price,
-          img
-        }
-      })
-      dispatch(setlistitems(wishlistItems))
     } catch (error) {
       console.log(error)
     }
@@ -96,31 +77,7 @@ const Navbar = () => {
   async function loadCart() {
     try {
       const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/cartproducts`, { withCredentials: true })
-      const items = response.data.cartProducts?.items;
-
-      setCart(items.length ?? 0);
-
-      const cartItems = items.map((item) => {
-        const pid = item.product;
-        const vid = item.variant;
-        const name = item.productDetails.name;
-        const qty = item.quantity;
-        const price = item.variantDetails.price;
-        const discount_price = item.variantDetails.discount_price;
-        const img = item.productDetails.images?.[0] ?? '';
-
-        return {
-          pid,
-          vid,
-          name,
-          qty,
-          price,
-          discount_price,
-          img,
-        };
-      });
-
-      dispatch(setcartitems(cartItems));
+      setCart(response.data.cartProducts.items.length ?? 0)
     } catch (error) {
       console.log(error)
     }
