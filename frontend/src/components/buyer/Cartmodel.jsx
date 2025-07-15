@@ -222,11 +222,11 @@ const CartModal = () => {
                                                 </div>
                                                 <div className="text-right space-y-1 sm:ml-4">
                                                     <p className={`text-lg font-sans ${item.discount_price ? 'line-through text-warmgrey' : 'text-CharcoalBlack font-medium'}`}>
-                                                        ${(item.price * item.qty).toFixed(2)}
+                                                        ₹{(item.price * item.qty).toFixed(2)}
                                                     </p>
                                                     {item.discount_price && (
                                                         <p className="text-lg text-CharcoalBlack font-Manrope font-medium">
-                                                            ${(item.discount_price * item.qty).toFixed(2)}
+                                                            ₹{(item.discount_price * item.qty).toFixed(2)}
                                                         </p>
                                                     )}
                                                 </div>
@@ -251,7 +251,7 @@ const CartModal = () => {
                                                 Subtotal
                                             </span>
                                             <span className="text-xl font-sans text-CharcoalBlack font-medium">
-                                                {totalprice}
+                                                ₹{totalprice}
                                             </span>
                                         </div>
                                         <div className="bg-offwhite/50 rounded-lg p-4">

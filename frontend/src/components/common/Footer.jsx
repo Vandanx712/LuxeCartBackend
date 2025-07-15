@@ -27,9 +27,9 @@ const Footer = () => {
       { name: "Our Promise", href: "/promise" },
     ],
     quickAccess: [
-      { name: "My Account", href: "/account" },
+      { name: "My Account", href: "/buyer" },
       { name: "My Orders", href: "/orders" },
-      { name: "Wishlist", href: "/wishlist" },
+      { name: "Wishlist", href: "/buyer/wishlist" },
       { name: "Returns & Cancellations", href: "/returns" },
       { name: "Help & Support", href: "/support" },
     ],

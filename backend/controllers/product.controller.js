@@ -233,7 +233,7 @@ export const homepageProduct = asynchandller(async (req, res) => {
     try {
         const buyerId = req.user.id
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
+        const limit = parseInt(req.query.limit) || 8;
         const skip = (page - 1) * limit;
 
         const [cartCategory, listCategory] = await Promise.all([
@@ -296,6 +296,7 @@ export const homepageProduct = asynchandller(async (req, res) => {
                 .skip(skip)
                 .limit(limit)
                 .sort({ createdAt: -1 })
+                .populate('category')
                 .select('_id name price discount_price discount images'),
             Product.countDocuments({ category: { $in: buyerCategories.map(cat => cat._id) } })
         ])

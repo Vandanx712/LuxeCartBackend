@@ -151,11 +151,11 @@ function Wishlist() {
                                         {/* Price */}
                                         <div className="space-y-1">
                                             <p className={`text-lg font-sans ${item.discount_price ? 'line-through text-warmgrey' : 'text-CharcoalBlack font-medium'}`}>
-                                                ${item.price.toFixed(2)}
+                                                ₹{item.price.toFixed(2)}
                                             </p>
                                             {item.discount_price && (
                                                 <p className="text-lg text-CharcoalBlack font-Manrope font-medium">
-                                                    ${item.discount_price.toFixed(2)}
+                                                    ₹{item.discount_price.toFixed(2)}
                                                 </p>
                                             )}
                                         </div>

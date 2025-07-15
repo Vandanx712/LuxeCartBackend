@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link ,useNavigate} from 'react-router-dom';
-import { FiUser, FiPackage, FiBell, FiHeart, FiMapPin, FiLogOut, FiMenu, FiX, FiShoppingCart } from 'react-icons/fi';
+import { FiUser, FiPackage, FiBell, FiHeart, FiMapPin, FiLogOut, FiMenu, FiX, FiShoppingCart, FiArrowLeft } from 'react-icons/fi';
 import axios from 'axios';
 import { FaCoins } from 'react-icons/fa';
 import { toast,Toaster } from 'react-hot-toast';
@@ -27,6 +27,7 @@ const AccountPage = () => {
         { name: 'Cart', icon:FiShoppingCart},
         { name: 'Favourites', icon: FiHeart },
         { name: 'Delivery Addresses', icon: FiMapPin },
+        {name: 'Continue Shooping' , icon:FiArrowLeft}
     ];
 
     useEffect(() => {
@@ -298,6 +299,11 @@ const AccountPage = () => {
                         </button>
                     </div>
                 );
+            
+            case 'Continue Shooping':
+                return (
+                    navigate('/')
+                )
 
             default:
                 return null;
