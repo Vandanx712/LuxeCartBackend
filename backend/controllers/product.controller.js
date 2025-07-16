@@ -42,6 +42,13 @@ export const getSubcategoryByCategory = asynchandller(async(req,res)=>{
     })
 })
 
+export const getCategoryAndSubcategory = asynchandller(async(req,res)=>{
+    const categories = await Category.find({is_subcategory:true,is_active:true}).select('_id name parent').populate('parent')
+    return res.status(200).json({
+        message:'Categories and Subcategoies fetch successfully',
+        categories
+    })
+})
 
 // attribute part  
 

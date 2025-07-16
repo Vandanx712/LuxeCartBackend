@@ -5,6 +5,7 @@ import { HiOutlineShoppingCart } from "react-icons/hi";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useDispatch, useSelector } from 'react-redux'
+import CategoryDropdown from "./CategoryDropdown";
 
 const Navbar = () => {
   const cartItems = useSelector(state => state.cart.items)
@@ -12,6 +13,7 @@ const Navbar = () => {
   const [isAccount, SetIsAccount] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCategoryOpen,setCategoryOpen] = useState(false)
   const [cart, setCart] = useState(cartItems.length)
   const [profilepic, setProfilepic] = useState('')
   const navigate = useNavigate()
@@ -102,13 +104,13 @@ const Navbar = () => {
               <Link to="/products" className="font-Playfair text-DeepNavy hover:text-gold transition-colors duration-300">
                 Products
               </Link>
-              <Link to="/categories" className="font-Playfair text-DeepNavy hover:text-gold transition-colors duration-300">
+              <button to="/categories" className="font-Playfair text-DeepNavy hover:text-gold transition-colors duration-300" onClick={()=>setCategoryOpen(!isCategoryOpen)}>
                 Categories
-              </Link>
+              </button>
             </div>
 
             {/* Icons */}
-            <div className="flex items-center md:space-x-7 space-x-5">
+            <div className="flex items-center md:space-x-7 space-x-5">   
               <div className="relative">
                 <button className="flex items-center text-[#1E3A5F] hover:text-[#D4AF37] transition-all duration-300 hover:scale-105 transform group">
                   <FiSearch size={25} />
@@ -162,7 +164,7 @@ const Navbar = () => {
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
-      <div className={`fixed top-0 left-0 h-full w-80 bg-white z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+      <div className={`fixed top-0 left-0 h-full w-80 bg-white overflow-y-auto z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
         }`}>
         {/* Mobile Menu Header */}
         <div className="flex items-center justify-between p-4 border-b border-warmgrey/20">
@@ -193,13 +195,12 @@ const Navbar = () => {
             <span className="font-Manrope text-DeepNavy font-medium">Products</span>
           </Link>
 
-          <Link
-            to='/'
-            className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gold/10 transition-colors duration-300"
+          <button
+            className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gold/10 transition-colors duration-300" onClick={()=>{setCategoryOpen(!isCategoryOpen);setIsMobileMenuOpen(false)}}
           >
             <FiGrid className="h-6 w-6 text-deep-navy" />
             <span className="font-Manrope text-DeepNavy font-medium">Categories</span>
-          </Link>
+          </button>
 
           <Link
             to='/buyer/carrt'
@@ -224,8 +225,9 @@ const Navbar = () => {
                 Welcome to LuxeCart
               </p>
             </div>
-          </div>
+        </div>
       </div>
+      {isCategoryOpen && <CategoryDropdown onclose={()=>setCategoryOpen(!isCategoryOpen)}/>}
     </>
   );
 };

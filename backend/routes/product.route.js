@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyjwt } from "../middlewares/verifyjwt.js";
-import {attributegetById, getallCategory, getCategoryById, getProductByCategory, getSubcategoryByCategory, homepageProduct, productGetById, searchProduct, variantgetById } from "../controllers/product.controller.js";
+import {attributegetById, getallCategory, getCategoryAndSubcategory, getCategoryById, getProductByCategory, getSubcategoryByCategory, homepageProduct, productGetById, searchProduct, variantgetById } from "../controllers/product.controller.js";
 import verifyRoles from "../middlewares/verifyrole.js";
 
 
@@ -10,6 +10,7 @@ const productRouter = Router()
 productRouter.route('/category/:categoryId').get(verifyjwt,getCategoryById)
 productRouter.route('/allcategory').get(verifyjwt,getallCategory)
 productRouter.route('/getsubcategory/:categoryId').get(verifyjwt,getSubcategoryByCategory)
+productRouter.route('/allcategoyandsubcategory').get(getCategoryAndSubcategory) // public api for buyer
 
 //attribute
 productRouter.route('/getattribute/:attributeId').get(verifyjwt,verifyRoles(['seller']),attributegetById)
