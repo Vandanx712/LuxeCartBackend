@@ -6,6 +6,7 @@ import SellerLogin from "../pages/Sellerlogin";
 import CartModal from "../components/buyer/Cartmodel";
 import AccountPage from "../components/buyer/Account";
 import Wishlist from "../components/buyer/wishlist";
+import Products from "../pages/Products";
 
 const Page = () => {
   const PrivateRoute = ({ children }) => {
@@ -23,6 +24,7 @@ const Page = () => {
         <Route path="/buyer" element={<PrivateRoute><AccountPage/></PrivateRoute>}/>
         <Route path="/" element={<Layout />} >
           <Route path="" element={<Home />} />
+          <Route path="products" element={<Products/>}/>
         </Route>
       </Routes>
     </BrowserRouter>

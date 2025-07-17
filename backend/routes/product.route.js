@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { verifyjwt } from "../middlewares/verifyjwt.js";
-import {attributegetById, getallCategory, getCategoryAndSubcategory, getCategoryById, getProductByCategory, getSubcategoryByCategory, homepageProduct, productGetById, searchProduct, variantgetById } from "../controllers/product.controller.js";
+import {allBrands, allProducts, attributegetById, getallCategory, getCategoryAndSubcategory, getCategoryById, getProductByCategory, getSubcategoryByCategory, homepageProduct, productGetById, searchProduct, variantgetById } from "../controllers/product.controller.js";
 import verifyRoles from "../middlewares/verifyrole.js";
 
 
@@ -8,8 +8,8 @@ const productRouter = Router()
 
 //category
 productRouter.route('/category/:categoryId').get(verifyjwt,getCategoryById)
-productRouter.route('/allcategory').get(verifyjwt,getallCategory)
-productRouter.route('/getsubcategory/:categoryId').get(verifyjwt,getSubcategoryByCategory)
+productRouter.route('/allcategory').get(getallCategory)
+productRouter.route('/getsubcategory/:categoryId').get(getSubcategoryByCategory)
 productRouter.route('/allcategoyandsubcategory').get(getCategoryAndSubcategory) // public api for buyer
 
 //attribute
@@ -17,11 +17,12 @@ productRouter.route('/getattribute/:attributeId').get(verifyjwt,verifyRoles(['se
 productRouter.route('/getvariant/:variantId').get(verifyjwt,verifyRoles(['seller']),variantgetById)
 
 //product
-productRouter.route('/getproductById/:productId').get(verifyjwt,productGetById)
-productRouter.route('/search').post(verifyjwt,searchProduct)
-productRouter.route('/searchby/:categoryId').get(verifyjwt,getProductByCategory)
+productRouter.route('/getproductById/:productId').get(productGetById)
+productRouter.route('/search').post(searchProduct)
+productRouter.route('/searchby/:categoryId').get(getProductByCategory)
 productRouter.route('/homepage').get(verifyjwt,homepageProduct)
-
+productRouter.route('/allproducts').get(allProducts)
+productRouter.route('/allbrand').get(allBrands)
 
 
 export default productRouter

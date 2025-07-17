@@ -188,7 +188,7 @@ const Navbar = () => {
           </Link>
 
           <Link
-            to='/'
+            to='/products'
             className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gold/10 transition-colors duration-300"
           >
             <FiPackage className="h-6 w-6 text-DeepNavy" />

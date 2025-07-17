@@ -34,7 +34,7 @@ export const getSubcategoryByCategory = asynchandller(async(req,res)=>{
     const {categoryId} = req.params
     const category = await Category.findById(categoryId)
     if(!category) throw new ApiError(404,'Category not found')
-    const subcategory = await Category.find({parent:categoryId})
+    const subcategory = await Category.find({parent:category.id})
 
     return res.status(200).json({
         message:'Fetch all subcategory of category',
@@ -151,9 +151,9 @@ export const productGetById = asynchandller(async(req,res)=>{
 
 export const searchProduct = asynchandller(async (req, res) => {
     try {
-        const { query } = req.query
+        const query  = req.query.statement
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
+        const limit = parseInt(req.query.limit) || 8;
         const skip = (page - 1) * limit;
 
         const [category, subcategory, brand] = await Promise.all([
@@ -176,7 +176,7 @@ export const searchProduct = asynchandller(async (req, res) => {
         }
 
         const [products,totalproducts] = await Promise.all([
-            Product.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }).select('_id name price discount_price discount images'),
+            Product.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }).populate('category').select('_id name price discount_price discount images'),
             Product.countDocuments(filter)
         ])
 
@@ -199,7 +199,7 @@ export const getProductByCategory = asynchandller(async (req, res) => {
         const { categoryId } = req.params
 
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
+        const limit = parseInt(req.query.limit) || 8;
         const skip = (page - 1) * limit;
 
         const [category, subcategory] = await Promise.all([
@@ -217,7 +217,7 @@ export const getProductByCategory = asynchandller(async (req, res) => {
         }
 
         const [products,totalproducts] = await Promise.all([
-            Product.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }).select('_id name price discount_price discount images'),
+            Product.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }).populate('category').select('_id name price discount_price discount images'),
             Product.countDocuments(filter)
         ])
 
@@ -285,6 +285,7 @@ export const homepageProduct = asynchandller(async (req, res) => {
                     .skip(skip)
                     .limit(limit)
                     .sort({ createdAt: -1 })
+                    .populate('category')
                     .select('_id name price discount_price discount images'),
 
                 Product.countDocuments({})
@@ -320,4 +321,54 @@ export const homepageProduct = asynchandller(async (req, res) => {
             error
         })
     }
+})
+
+export const allProducts = asynchandller(async(req,res)=>{
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 6;
+        const skip = (page - 1) * limit;
+
+        const [products, totalproducts] = await Promise.all([
+            Product.find({})
+                .skip(skip)
+                .limit(limit)
+                .sort({ createdAt: -1 })
+                .populate('category')
+                .select('_id name price discount_price discount images'),
+            Product.countDocuments({})
+        ])
+
+        return res.status(200).json({
+            page,
+            totalpages: Math.ceil(totalproducts / limit),
+            totalproducts,
+            products
+        })
+
+    } catch (error) {
+        res.status(500).json({
+            message: 'Server error',
+            error
+        })
+    }
+}) // aa api products page ma and home page ma if user not login tyare use thase  
+
+export const allBrands = asynchandller(async(req,res)=>{
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 3;
+    const skip = (page - 1) * limit;
+
+    const products = (await Product.find({}).select('-_id brand')).map((b)=>b.brand)
+    const allbrands = [...new Set(products)]
+    const brands = []
+    for(let i=skip;i<skip+limit;i++) {
+        brands.push(allbrands[i])
+    }
+    return res.status(200).json({
+        message:'Fetch all brands successfully',
+        page,
+        brands,
+        totalbrands:(allbrands.length-limit*page)
+    })
 })
