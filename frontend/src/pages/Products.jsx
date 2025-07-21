@@ -163,7 +163,7 @@ function Products() {
         setIsSidebarOpen(false)
         if(selectedBrand == brand){
             setSelectedBrand('all')
-            productFilter(selectedCategory)
+            loadproduct()
         }
         else{
             setSelectedBrand(brand)

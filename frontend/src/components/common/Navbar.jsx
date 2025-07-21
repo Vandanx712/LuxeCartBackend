@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect } from "react";
-import { FaShoppingCart, FaUser, FaSearch } from "react-icons/fa";
 import { FiBell, FiGrid, FiHeart, FiHome, FiLogIn, FiMenu, FiPackage, FiSearch, FiUser, FiX } from "react-icons/fi";
 import { HiOutlineShoppingCart } from "react-icons/hi";
 import { Link, useNavigate } from "react-router-dom";
@@ -21,12 +20,6 @@ const Navbar = () => {
   const cartRef = useRef(null);
   const accountRef = useRef(null);
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen((prev) => !prev);
-    setIsCartOpen(false);
-    setIsAccountOpen(false);
-  };
-
   useEffect(() => {
 
     const user = localStorage.getItem('id')
@@ -35,23 +28,9 @@ const Navbar = () => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 30);
     };
-    const handleClickOutside = (event) => {
-      if (
-        cartRef.current &&
-        !cartRef.current.contains(event.target) &&
-        accountRef.current &&
-        !accountRef.current.contains(event.target)
-      ) {
-        setIsCartOpen(false);
-        setIsAccountOpen(false);
-      }
-    };
     window.addEventListener("scroll", handleScroll);
-    document.addEventListener("mousedown", handleClickOutside);
-
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -76,7 +55,7 @@ const Navbar = () => {
   useEffect(() => {
     loadCart()
     getpic()
-  }, [])
+  }, [cartItems.length])
 
   return (
     <>
@@ -203,7 +182,7 @@ const Navbar = () => {
           </button>
 
           <Link
-            to='/buyer/carrt'
+            to='/buyer/cart'
             className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gold/10 transition-colors duration-300"
           >
             <HiOutlineShoppingCart className="h-6 w-6 text-deep-navy" />

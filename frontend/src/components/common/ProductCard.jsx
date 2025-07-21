@@ -1,8 +1,13 @@
+import axios from "axios";
+import { toast, Toaster }  from "react-hot-toast";
 import { FaHeart} from "react-icons/fa";
 import { FiShoppingCart } from "react-icons/fi";
-
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import {addtocart} from '../../redux/cartslice'
 
 const ProductCard = ({
+    _id,
     name,
     price,
     discount_price,
@@ -10,7 +15,8 @@ const ProductCard = ({
     discount,
     category,
 }) => {
-
+    const navigate = useNavigate()
+    const dispatch = useDispatch()
     const replaceChar = (name) =>{
         let NAME = name.split('')
         if(name.length > 50){
@@ -23,8 +29,40 @@ const ProductCard = ({
         }
         return name
     }
+
+    const addToWishlist = async()=>{
+        try {
+            await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/addonwishlist/${_id}`,{},{withCredentials:true})
+        } catch (error) { 
+            toast.error('Login first')
+            navigate('/login')
+        }
+    }
+
+    const addToCart = async()=>{
+        const item = {
+            pid:_id,
+            vid:null,
+            name:name,
+            price,
+            discount_price,
+            qty:1,
+            img:images[0]
+        }
+        try {
+            await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/addoncart`,{
+                productId:_id,
+                variantId:null,
+                quantity:1
+            },{withCredentials:true})
+            dispatch(addtocart(item))
+        } catch (error) {
+            dispatch(addtocart(item))
+        }
+    }
+
     return (
-        <div className="group hover:shadow-2xl transition-all duration-500 border-0 bg-white overflow-hidden animate-scale-in rounded-lg">
+        <div key={_id} className="group hover:shadow-2xl transition-all duration-500 border-0 bg-white overflow-hidden animate-scale-in rounded-lg cursor-pointer" >
             <div className="relative overflow-hidden">
                 <img
                     src={images[0]}
@@ -48,17 +86,17 @@ const ProductCard = ({
                 {/* Hover overlay */}
                 <div className="absolute inset-0 bg-charcoal-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                     <div className="flex gap-3">
-                        <button className="inline-flex items-center justify-center w-10 h-10 bg-white hover:bg-gold hover:text-white transition-colors duration-300 rounded-md">
+                        <button className="inline-flex items-center justify-center w-10 h-10 bg-white hover:bg-gold hover:text-white transition-colors duration-300 rounded-md cursor-pointer" onClick={addToWishlist}>
                             <FaHeart className="h-4 w-4" />
                         </button>
-                        <button className="inline-flex items-center justify-center w-10 h-10 bg-gold hover:bg-gold/90 hover:text-white text-charcoal-black rounded-md">
+                        <button className="inline-flex items-center justify-center w-10 h-10 bg-gold hover:bg-gold/90 hover:text-white text-charcoal-black rounded-md cursor-pointer" onClick={addToCart}>
                             <FiShoppingCart className="h-4 w-4" />
                         </button>
                     </div>
                 </div>
             </div>
 
-            <div className="p-6">
+            <div className="p-6" onClick={()=>navigate(`/product/${_id}`)}>
                 <div className="mb-2">
                     <span className="text-warmgrey text-sm font-Manrope uppercase tracking-wider">
                         {category.name}
@@ -69,17 +107,16 @@ const ProductCard = ({
                     {replaceChar(name)}
                 </h3>
 
-                <div className="flex items-center mb-3">
-                    {/* <div className="flex items-center">
+                {/* <div className="flex items-center mb-3">
+                    <div className="flex items-center">
                         {[...Array(5)].map((_, i) => (
                             <FaStar
                                 key={i}
                                 className={`h-4 w-4 ${i < Math.floor(rating) ? 'text-gold fill-gold' : 'text-warm-grey'}`}
                             />
                         ))}
-                    </div> */}
-                    
-                </div>
+                    </div>
+                </div> */}
 
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -97,12 +134,9 @@ const ProductCard = ({
                             </span>
                         }
                     </div>
-
-                    <button className="inline-flex items-center justify-center border border-gold text-gold hover:bg-gold hover:text-white font-Manrope px-3 py-1 rounded-md text-sm transition-all duration-300">
-                        Quick View
-                    </button>
                 </div>
             </div>
+            <Toaster position="top-center" reverseOrder={false} />
         </div>
     );
 };
