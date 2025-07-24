@@ -7,7 +7,7 @@ import verifyRoles from "../middlewares/verifyrole.js";
 const productRouter = Router()
 
 //category
-productRouter.route('/category/:categoryId').get(verifyjwt,getCategoryById)
+productRouter.route('/category/:categoryId').get(getCategoryById)
 productRouter.route('/allcategory').get(getallCategory)
 productRouter.route('/getsubcategory/:categoryId').get(getSubcategoryByCategory)
 productRouter.route('/allcategoyandsubcategory').get(getCategoryAndSubcategory) // public api for buyer

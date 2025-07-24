@@ -53,7 +53,7 @@ const CartModal = () => {
         try {
             const response = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/removeoncart/${pid}/${vid}`, {}, { withCredentials: true })
             setTotalprice(response.data.cart.totalprice)
-            setCart(cart.filter((item) => item.pid !== pid && item.vid !== vid))
+            setCart(cart.filter((item) => item.pid == pid && item.vid == vid))
             dispatch(setcartitems(cart))
             toast.success(response.data.message)
         } catch (error) {

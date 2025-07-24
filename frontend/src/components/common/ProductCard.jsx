@@ -96,7 +96,7 @@ const ProductCard = ({
                 </div>
             </div>
 
-            <div className="p-6" onClick={()=>navigate(`/product/${_id}`)}>
+            <div className="p-6" onClick={()=>window.open(`/product/${_id}`,'_blank')}>
                 <div className="mb-2">
                     <span className="text-warmgrey text-sm font-Manrope uppercase tracking-wider">
                         {category.name}
