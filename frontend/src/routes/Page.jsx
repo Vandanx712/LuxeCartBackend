@@ -8,6 +8,7 @@ import AccountPage from "../components/buyer/Account";
 import Wishlist from "../components/buyer/wishlist";
 import Products from "../pages/Products";
 import Product from "../components/common/Product";
+import CategoryProducts from "../components/common/CategoryProducts";
 
 const Page = () => {
   const PrivateRoute = ({ children }) => {
@@ -27,6 +28,7 @@ const Page = () => {
           <Route path="" element={<Home />} />
           <Route path="products" element={<Products/>}/>
           <Route path="product/:id" element={<Product/>}/>
+          <Route path="category/:pcid/:scid" element={<CategoryProducts/>}/>
         </Route>
       </Routes>
     </BrowserRouter>

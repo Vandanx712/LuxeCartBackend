@@ -28,6 +28,7 @@ const CartModal = () => {
                 const vid = item.variant;
                 const name = item.productDetails.name;
                 const qty = item.quantity;
+                const variant_name = item.variantDetails.variant_name;
                 const price = item.variantDetails.price;
                 const discount_price = item.variantDetails.discount_price;
                 const img = item.productDetails.images?.[0] ?? '';
@@ -37,6 +38,7 @@ const CartModal = () => {
                     vid,
                     name,
                     qty,
+                    variant_name,
                     price,
                     discount_price,
                     img,
@@ -53,7 +55,7 @@ const CartModal = () => {
         try {
             const response = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/removeoncart/${pid}/${vid}`, {}, { withCredentials: true })
             setTotalprice(response.data.cart.totalprice)
-            setCart(cart.filter((item) => item.pid == pid && item.vid == vid))
+            setCart(cart.filter((item) => (item.pid !== pid && item.vid !== vid) || (item.pid === pid && item.vid !== vid)))
             dispatch(setcartitems(cart))
             toast.success(response.data.message)
         } catch (error) {
@@ -146,7 +148,7 @@ const CartModal = () => {
                         </p>
 
                         <button
-                            onClick={()=>navigate('/')}
+                            onClick={()=>navigate('/products')}
                             className="px-8 py-4 rounded-xl bg-royalpurple hover:bg-royalpurple/90 text-white font-Monrope text-lg transition-all duration-200 hover:shadow-lg hover:scale-105"
                         >
                             Start Shopping
@@ -181,13 +183,9 @@ const CartModal = () => {
                                                         <h3 className="text-lg font-sans text-CharcoalBlack leading-tight mb-1">
                                                             {item.name}
                                                         </h3>
-                                                        {(item.color || item.size) && (
-                                                            <p className="text-sm text-warmgrey font-manrope">
-                                                                {item.color && item.color}
-                                                                {item.size && item.color && " • "}
-                                                                {item.size && item.size}
-                                                            </p>
-                                                        )}
+                                                        <p className="text-sm text-warmgrey font-Manrope">
+                                                            {item.variant_name}
+                                                        </p>
                                                     </div>
                                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                                                         <div className="flex items-center space-x-4">
@@ -221,7 +219,7 @@ const CartModal = () => {
                                                     </div>
                                                 </div>
                                                 <div className="text-right space-y-1 sm:ml-4">
-                                                    <p className={`text-lg font-sans ${item.discount_price ? 'line-through text-warmgrey' : 'text-CharcoalBlack font-medium'}`}>
+                                                    <p className={`text-lg font-sans ${item.discount_price!== item.price ? 'line-through text-warmgrey' : 'hidden'}`}>
                                                         ₹{(item.price * item.qty).toFixed(2)}
                                                     </p>
                                                     {item.discount_price && (

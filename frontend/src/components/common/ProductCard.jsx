@@ -19,11 +19,9 @@ const ProductCard = ({
     const dispatch = useDispatch()
     const replaceChar = (name) =>{
         let NAME = name.split('')
-        if(name.length > 50){
-            let j = name.length - 1
-            for (let i = 51; i < name.length; i++) {
-                NAME[j] = '.'
-                j = j - 1
+        if(name.length > 45){
+            for (let i = 46; i < name.length; i++) {
+                NAME[i] = '.'
             }
             return NAME.join('')
         }

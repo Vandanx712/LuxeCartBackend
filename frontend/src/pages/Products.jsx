@@ -46,6 +46,7 @@ function Products() {
     const hasActiveFilters = selectedCategory !== 'all' || selectedSubCategory !== 'all' || selectedBrand !== 'all' || selectedDiscount !== 'all';
 
     useEffect(() => {
+        window.scrollTo(0,0)
         loadcategory()
         loadproduct()
         loadbrand()
@@ -136,8 +137,10 @@ function Products() {
 
     const handleCategoryClick = (categoryId) => {
         setIsSidebarOpen(false)
+        setSelectedBrand('all')
         if(selectedCategory == categoryId) {
             setSelectedCategory('all')
+            setSelectedSubCategory('all')
             loadproduct()
         }
         else{
@@ -160,6 +163,8 @@ function Products() {
     }
 
     const handleBrandClick = (brand)=>{
+        setSelectedSubCategory('all')
+        setSelectedCategory('all')
         setIsSidebarOpen(false)
         if(selectedBrand == brand){
             setSelectedBrand('all')

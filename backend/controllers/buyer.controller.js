@@ -342,7 +342,7 @@ export const getAllCartProducts = asynchandller(async (req, res) => {
         pipeline:[
             {
                 $project:{
-                    name:1,
+                    variant_name:1,
                     price:1,
                     discount_price:1,
                 }

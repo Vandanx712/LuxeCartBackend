@@ -29,6 +29,7 @@ function Product() {
 
 
   useEffect(() => {
+    window.scrollTo(0,0)
     loadProduct()
   }, [])
 
@@ -71,6 +72,7 @@ function Product() {
   }
 
   const handleVariant = (variant) => {
+    setQuantity(1)
     setSeletedVariant(variant._id)
     setPrice(variant.price)
     setDiscountPrice(variant.discount_price)
@@ -177,7 +179,7 @@ function Product() {
                     <span className=' text-CharcoalBlack'>Free Shipping</span>
                   </div>
                   <div className={`flex items-center gap-2 ${instock ? 'block' : 'hidden'}`}>
-                    <span className="w-3 h-3 bg-emeraldgreen rounded-full"></span>
+                    <span className="w-3 h-3 bg-green-600 rounded-full"></span>
                     <span className=' text-CharcoalBlack'>In Stock</span>
                   </div>
                   <div className={`flex items-center gap-2 ${!instock ? 'block' : 'hidden'}`}>
@@ -192,7 +194,7 @@ function Product() {
                 <h3 className="text-DeepNavy mb-3">Varieties ({attribute})</h3>
                 <div className="flex space-x-2">
                   {varietys.map((variant) => (
-                    <button key={variant._id} className={`cursor-pointer px-2.5 py-1 rounded-sm border-deep-navy shadow-lg text-sm font-sans text-white ${selectedVariant === variant._id ? 'bg-emeraldgreen/50' : 'bg-emeraldgreen hover:bg-emeraldgreen/80'}  hover:scale-105 transition-all duration-500`} onClick={() => handleVariant(variant)}>{variant.variant_name}</button>
+                    <button key={variant._id} className={`cursor-pointer px-2.5 py-1 rounded-sm border-deep-navy shadow-lg text-sm font-sans text-white ${selectedVariant === variant._id ? 'bg-emeraldgreen/50' : 'bg-emeraldgreen hover:bg-emeraldgreen/80 hover:scale-105 transition-all duration-500'} `} onClick={() => handleVariant(variant)}>{variant.variant_name}</button>
                   ))}
                 </div>
               </div>
@@ -261,7 +263,7 @@ function Product() {
           {/* Related Products */}
           <div>
             <h2 className="font-Playfair text-3xl font-semibold text-deep-navy-dark mb-8">Related Products</h2>
-            <div className="grid md:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid md:grid-cols-3 gap-6">
               {relatedProducts.map((product) => (
                 <ProductCard key={product._id} {...product} />
               ))}

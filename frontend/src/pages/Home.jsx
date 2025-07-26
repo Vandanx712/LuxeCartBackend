@@ -10,6 +10,7 @@ const Home = () => {
   const [products,setProducts] = useState([])    
 
   useEffect(()=>{
+    window.scrollTo(0,0)
     loadHome()
   },[])
 

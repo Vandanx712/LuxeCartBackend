@@ -69,8 +69,7 @@ const CategoryDropdown = ({onclose}) => {
                     {structuredData.categories.map((cat, index) => (
                         <div
                             key={cat.pcid}
-                            className="space-y-2 sm:space-y-3 animate-slide-in"
-                            style={{ animationDelay: `${index * 50}ms` }}
+                            className="space-y-2 sm:space-y-3"
                         >
                             <h4 className="font-Manrope text-DeepNavy text-lg uppercase tracking-wide border-b border-gold/30 pb-1 sm:pb-2">
                                 {cat.pcname}
@@ -79,7 +78,8 @@ const CategoryDropdown = ({onclose}) => {
                                 {(structuredData.subcategories[cat.pcid] || []).map((sub) => (
                                     <li key={sub.scid}>
                                         <Link
-                                            to="/"
+                                            to={`/category/${cat.pcid}/${sub.scid}`}
+                                            onClick={onclose}
                                             className="font-manrope text-[16px] text-warmgrey hover:text-DeepNavy transition-colors duration-200 flex items-center gap-2 group"
                                         >
                                             <span>{sub.scname}</span>
@@ -90,28 +90,6 @@ const CategoryDropdown = ({onclose}) => {
                             </ul>
                         </div>
                     ))}
-                </div>
-
-                {/* Featured Section */}
-                <div className="mt-5 sm:mt-6 pt-4 border-t border-warmgrey/20">
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        <div className="bg-gradient-to-r from-gold/10 to-royal-purple/10 p-4 rounded-lg flex-1 border border-gold/20">
-                            <h5 className="font-Playfair font-semibold text-DeepNavy mb-2">
-                                Featured Deals
-                            </h5>
-                            <p className="font-manrope text-sm text-warmgrey">
-                                Up to 70% off on top brands
-                            </p>
-                        </div>
-                        <div className="bg-gradient-to-r from-emeraldgreen/10 to-DeepNavy/10 p-4 rounded-lg flex-1 border border-emeraldgreen/20">
-                            <h5 className="font-Playfair font-semibold text-DeepNavy mb-2">
-                                New Arrivals
-                            </h5>
-                            <p className="font-manrope text-sm text-warmgrey">
-                                Latest products just in
-                            </p>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
