@@ -152,7 +152,18 @@ export const updateAddress = asynchandller(async(req,res)=>{
     if(!updatedAddress) throw new ApiError(404,"Address not found")
 
     return res.status(200).json({
-        message:'Update your address',
+        message:'Address update successfully',
         updatedAddress
+    })
+})
+
+export const deleteAddress = asynchandller(async(req,res)=>{
+    const {addressId} = req.params
+    const address = await Address.findById(addressId)
+    if(!address) throw new ApiError('Address not found')
+    
+    await Address.deleteOne({_id:addressId})
+    return res.status(200).json({
+        message:'Address delete successfully'
     })
 })

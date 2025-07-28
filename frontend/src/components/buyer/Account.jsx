@@ -17,6 +17,12 @@ const AccountPage = () => {
     const [email,setEmail] = useState(buyer.email)
     const [contactNo,setContactNo] = useState(buyer.phone)
     const [hideButton,setHideButton] = useState(true)
+    const [openAddressForm,setOpenAddressForm] = useState(false)
+    const [street,setStreet] = useState('')
+    const [city,setCity] = useState('')
+    const [state,setState] = useState('')
+    const [pincode,setPincode] = useState('')
+    const [isEditAddress,setIsEditAddress] = useState('')
     const navigate = useNavigate()
 
     const menuItems = [
@@ -94,6 +100,67 @@ const AccountPage = () => {
                 console.log(error)
             }
         }
+    }
+
+    const NewAddress = async()=>{
+        try {
+            const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/addAddress`,{
+                street,
+                city,
+                state,
+                zipcode:pincode
+            },{withCredentials:true})
+            toast.success(response.data.message)
+            setOpenAddressForm(false)
+            loadAddress()
+        } catch (error) {
+            console.log(error)
+            toast.error(error.response?.data.message)
+        }
+    }
+
+    const updateaddress = async()=>{
+        try {
+            const response = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/updateaddress`,{
+                addressId:isEditAddress,
+                street,
+                city,
+                state,
+                zipcode: pincode
+            },{withCredentials:true})
+            clearAddState()
+            toast.success(response.data.message)
+            loadAddress()
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    const handleDelete = async(address)=>{
+        try {
+            const response = await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/api/deleteaddress/${address.id}`,{withCredentials:true})
+            loadAddress()
+            toast.success(response.data.message)
+        } catch (error) {
+            console.log(error)
+        }
+    }
+    
+    const clearAddState = ()=>{
+        setOpenAddressForm(false)
+        setStreet('')
+        setCity('')
+        setState('')
+        setPincode('')
+    }
+
+    const handleEdit = (address)=>{
+        setStreet(address.street)
+        setCity(address.city)
+        setState(address.state)
+        setPincode(address.pincode)
+        setIsEditAddress(address.id)
+        setOpenAddressForm(true)
     }
 
     const renderContent = () => {
@@ -274,29 +341,98 @@ const AccountPage = () => {
                             {address.map((address,index) => (
                                 <div key={address.id} className="bg-offwhite rounded-lg p-4 border border-warmgrey/20">
                                     <div className="flex items-center justify-evenly text-pretty space-y-3">
-                                        <div>
+                                        <div className=' w-[450px] h-auto'>
                                             <h3 className="font-Playfair text-xl font-medium text-CharcoalBlack">Home Address - {index+1}</h3>
-                                            <p className="text-gray-500 font-Manrope mt-5 mb-2">
+                                            <p className="text-gray-500 font-Manrope mt-8 mb-2 text-pretty">
                                                 {address.street} <br />
                                                 {address.city}, {address.state} - {address.pincode} <br />
                                                 India
                                             </p>
-                                            {!address.Default && (
+                                            {address.Default && (
                                                 <span className="bg-royalpurple/10 text-royalpurple px-3 py-1 rounded-full text-sm font-Manrope">
                                                     Default Address
                                                 </span>
                                             )}
                                         </div>
-                                        <button className="text-royalpurple hover:text-royalpurple/50 font-Manrope text-lg transition-colors">
-                                            Edit
-                                        </button>
+                                        <div className='flex space-x-5'>
+                                            <button className="text-royalpurple hover:text-royalpurple/50 font-Manrope text-lg transition-colorsv cursor-pointer" onClick={()=>handleEdit(address)}>
+                                                Edit
+                                            </button>
+                                            <button className="text-red-700 hover:text-red-400 font-Manrope text-lg transition-colors cursor-pointer" onClick={() => handleDelete(address)}>
+                                                Delete
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             ))}
                         </div>
-                        <button className="bg-royalpurple hover:bg-royalpurple/90 text-white font-Manrope px-6 py-2 rounded-md transition-colors">
+                        <button className="bg-royalpurple hover:bg-royalpurple/90 text-white font-Manrope px-6 py-2 rounded-md transition-colors" onClick={()=>setOpenAddressForm(true)}>
                             Add New Address
                         </button>
+                        {openAddressForm && (<div className=" bg-warmgrey/15 rounded-lg p-6 mt-10 flex-col space-y-5">
+                            {isEditAddress.length == 0 && (<div className=' flex items-center justify-between'>
+                                <h1 className='text-2xl font-Playfair font-medium text-CharcoalBlack mb-6'>Add New Address</h1>
+                                <button className='p-1 text-xl' onClick={()=>setOpenAddressForm(false)}><FiX/></button>
+                            </div>)}
+                            {isEditAddress.length !== 0 && (<div className=' flex items-center justify-between'>
+                                <h1 className='text-2xl font-Playfair font-medium text-CharcoalBlack mb-6'>Update Your Address</h1>
+                                <button className='p-1 text-xl' onClick={()=>clearAddState()}><FiX/></button>
+                            </div>)}
+                            <div>
+                                <label className="block text-sm font-Manrope text-CharcoalBlack mb-2">Street</label>
+                                <input
+                                    type="text"
+                                    value={street}
+                                    onChange={(e) => {
+                                        setStreet(e.target.value)
+                                    }}
+                                    className="w-full px-3 py-2 border bg-white border-warmgrey/30 rounded-md font-Manrope focus:outline-none focus:border-royalpurple"
+                                />
+                            </div>
+                            <div className="">
+                                <label className="block text-sm font-Manrope text-CharcoalBlack mb-2">City</label>
+                                <input
+                                    type="text"
+                                    value={city}
+                                    onChange={(e) => {
+                                       setCity(e.target.value)
+                                    }}
+                                    className="w-full px-3 py-2 border bg-white border-warmgrey/30 rounded-md font-Manrope focus:outline-none focus:border-royalpurple"
+                                />
+                            </div>
+                            <div className="">
+                                <label className="block text-sm font-Manrope text-CharcoalBlack mb-2">State</label>
+                                <input
+                                    type="text"
+                                    value={state}
+                                    onChange={(e) => {
+                                      setState(e.target.value)
+                                    }}
+                                    className="w-full px-3 py-2 border bg-white border-warmgrey/30 rounded-md font-Manrope focus:outline-none focus:border-royalpurple"
+                                />
+                            </div>
+                            <div className="">
+                                <label className="block text-sm font-Manrope text-CharcoalBlack mb-2">Pincode</label>
+                                <input
+                                    type='text'
+                                    value={pincode}
+                                    className="w-full px-3 py-2 border bg-white border-warmgrey/30 rounded-md font-Manrope focus:outline-none focus:border-royalpurple"
+                                    onChange={(e) => {
+                                        const onlyDigits = e.target.value.replace(/\D/g, '');
+                                        const limitedDigits = onlyDigits.slice(0, 6);
+                                        setPincode(Number(limitedDigits.trim()));
+                                    }}
+                                />
+                            </div>
+                            {isEditAddress.length == 0 && (<button className=" w-full bg-royalpurple hover:bg-royalpurple/90 text-white font-Manrope px-6 py-2 rounded-md transition-colors" onClick={NewAddress}>
+                                Add New Address
+                            </button>)}
+                            {isEditAddress.length !== 0 && (<button className=" w-full bg-royalpurple hover:bg-royalpurple/90 text-white font-Manrope px-6 py-2 rounded-md transition-colors" onClick={updateaddress}>
+                                Save Address
+                            </button>)}
+                        </div>
+                            
+                        )}
                     </div>
                 );
             

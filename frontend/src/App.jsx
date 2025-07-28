@@ -1,4 +1,3 @@
-import './App.css'
 import Page from './routes/Page'
 import { Provider } from 'react-redux'
 import store  from './redux/store'
