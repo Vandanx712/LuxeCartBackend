@@ -7,5 +7,5 @@ dotenv.config()
 export const google = new Google(
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
-    "http://localhost:2003/google/callback"
+    "http://localhost:2003/api/google/callback"
 )

@@ -63,10 +63,6 @@ export const registerBuyer = asynchandller(async (req, res) => {
         Cart.create({buyer:newBuyer.id}),
         Coin.create({buyer: newBuyer.id,coincount: 100})
     ])
-    newBuyer.usercoin = coin.id,
-    newBuyer.wishlist = wishlist.id
-    newBuyer.cart = cart.id
-    await newBuyer.save()
 
     return res.status(200).json({
         message: 'Register successful',

@@ -7,6 +7,10 @@ import { findUserByEmail } from './common.controller.js';
 import { decodeIdToken, generateCodeVerifier, generateState } from "arctic";
 import { google } from "../services/goolge.js";
 import { Buyer } from "../models/buyer/buyer.model.js";
+import sendWelcomeEmail from "../notification/sentWelcomeMail.js";
+import { Wishlist } from "../models/buyer/wishlist.model.js";
+import { Cart } from "../models/buyer/cart.model.js";
+import { Coin } from "../models/buyer/coin.model.js";
 
 dotenv.config()
 
@@ -129,8 +133,7 @@ export const getGoogleLoginCallback = asynchandller(async (req, res) => {
 
     const user = await findUserByEmail(email)
     if (user && user.role !== 'buyer') throw new ApiError(400, 'User already exist for other roles')
-
-    if (!user.password && user.providerAccountId) {
+    else if (user && user.role === 'buyer') {
         const accessToken = await generateAccessToken(user)
         const refreshToken = await generateRefreshToken(user.id)
         const options = {
@@ -140,36 +143,45 @@ export const getGoogleLoginCallback = asynchandller(async (req, res) => {
         return res.status(200)
             .cookie('accessToken', accessToken, options)
             .cookie('refreshToken', refreshToken, options)
-            .json({
-                message: 'Login with google successfully',
-                user
-            })
-            .redirect('/home')
+            .redirect('http://localhost:5173/login-success')
     }
-
-    const newbuyer = await Buyer.create({
-        name: name,
-        email: email,
-        phone: phone,
-        providerAccountId: googleUserId,
-        role: 'buyer',
-        password: null,
-        profileImg: picture
-    })
-
-    const accessToken = await generateAccessToken(newbuyer)
-    const refreshToken = await generateRefreshToken(newbuyer.id)
-    const options = {
-        httpOnly: true,
-        secure: true
-    }
-
-    return res.status(200)
-        .cookie('accessToken', accessToken, options)
-        .cookie('refreshToken', refreshToken, options)
-        .json({
-            message: 'Buyer register and login successfully',
-            newbuyer
+    else {
+        const newbuyer = await Buyer.create({
+            name: name,
+            email: email,
+            phone: phone,
+            providerAccountId: googleUserId,
+            role: 'buyer',
+            password: null,
+            profileImg: picture
         })
-        .redirect('/home')
+
+        sendWelcomeEmail(newbuyer)
+
+        await Promise.all([
+            Wishlist.create({ buyer: newbuyer.id }),
+            Cart.create({ buyer: newbuyer.id }),
+            Coin.create({ buyer: newbuyer.id, coincount: 100 })
+        ])
+
+        const accessToken = await generateAccessToken(newbuyer)
+        const refreshToken = await generateRefreshToken(newbuyer.id)
+        const options = {
+            httpOnly: true,
+            secure: true
+        }
+
+        return res.status(200)
+            .cookie('accessToken', accessToken, options)
+            .cookie('refreshToken', refreshToken, options)
+            .redirect('http://localhost:5173/login-success')
+    }
+})
+
+export const getMe = asynchandller(async(req,res)=>{
+    const user = req.user
+    return res.status(200).json({
+        message:'Login successfully',
+        user
+    })
 })

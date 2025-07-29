@@ -19,8 +19,8 @@ const Login = () => {
         e.preventDefault();
         try {
             const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/login`,{
-                email:email,
-                password:password
+                email:email.trim(),
+                password:password.trim()
             },{withCredentials:true}) 
             setLocalStorage(response.data.user)
             toast.success(response.data.message)
@@ -43,9 +43,10 @@ const Login = () => {
 
     const handleGoogleLogin = async() => {
         try {
-           const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/googlelogin`)
+           const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/googlelogin`,{withCredentials:true})
            window.location.href = response.data.url
         } catch (error) {
+            toast.error(error.response?.data.message)
             console.log(error)
         }
     };
@@ -54,16 +55,12 @@ const Login = () => {
         if(!email) toast.error('Please enter email to send otp')
     };
 
-    const handleBecomeASeller = () => {
-        navigate('/sellerlogin')
-    };
-
     return (
 
         <div className="min-h-screen flex flex-col justify-center items-center bg-gradient-to-br from-DeepNavy to-royalpurple font-manrope p-4 relative">
 
             {/* Form Card */}
-            <div className="w-full max-w-sm bg-offwhite/95 shadow-xl rounded-lg p-6 space-y-6 z-10">
+            <div className="w-full max-w-md bg-offwhite/95 shadow-xl rounded-lg p-6 space-y-6 z-10">
 
                 {/* Icon & Welcome */}
                 <div className="text-center space-y-4">
@@ -170,7 +167,7 @@ const Login = () => {
                         <span className="font-semibold text-royalpurple">Don't have an account? </span>
                         <button
                             type="button"
-                            onClick={() => navigate('/sellerlogin')}
+                            onClick={() => navigate('/signup')}
                             className="text-sm text-CharcoalBlack hover:text-royalpurple hover:text-[15px] transition-colors"
                         >
                             Sign Up
@@ -179,7 +176,7 @@ const Login = () => {
 
                     <button
                         type="button"
-                        onClick={handleBecomeASeller}
+                        onClick={()=> navigate('sellerlogin')}
                         className="text-sm bg-gradient-to-l from-gold to-gold/90 text-white px-6 py-2 rounded-full hover:opacity-90 transition-all duration-300 transform hover:scale-105 font-medium"
                     >
                         Become a Seller
