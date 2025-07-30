@@ -5,12 +5,14 @@ import { FiLock, FiUser } from 'react-icons/fi';
 import {Toaster,toast} from 'react-hot-toast'
 import axios from 'axios'
 import { FaUserTie } from 'react-icons/fa';
+import ForgetPassword from '../components/common/ForgetPassword';
 
 const SellerLogin = () => {
     const navigate = useNavigate()
     const [showPassword, setShowPassword] = useState(false);
     const [email,setEmail] = useState('')
     const [password,setPassword] = useState('')
+    const [isforget,setForget] = useState(false)
 
     useEffect(() => {
         localStorage.clear()
@@ -37,12 +39,16 @@ const SellerLogin = () => {
         localStorage.setItem('username',user.username)
         localStorage.setItem('name',user.name)
         localStorage.setItem('email',user.email)
-        localStorage.setItem('role',user.role)
+        localStorage.setItem('role', user.role)
     }
 
     const handleForgotPassword = () => {
-        if(!email) toast.error('Please enter email to send otp')
-    }
+        if (!email) {
+            toast.error('Please enter email to send otp')
+            setForget(false)
+        }
+        else setForget(true)
+    };
 
     return (
 
@@ -69,7 +75,7 @@ const SellerLogin = () => {
                             Email Address
                         </label>
                         <div className="relative">
-                            <IoMailOutline className="absolute left-3 top-3 h-4 w-4 text-warmgrey" />
+                            <IoMailOutline className="absolute left-3 top-4 h-4 w-4 text-warmgrey" />
                             <input
                                 type="email"
                                 name="email"
@@ -86,7 +92,7 @@ const SellerLogin = () => {
                             Password
                         </label>
                         <div className="relative">
-                            <FiLock className="absolute left-3 top-3 h-4 w-4 text-warmgrey" />
+                            <FiLock className="absolute left-3 top-4 h-4 w-4 text-warmgrey" />
                             <input
                                 id="password"
                                 name="password"
@@ -99,7 +105,7 @@ const SellerLogin = () => {
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-3 text-warmgrey hover:text-CharcoalBlack transition-colors"
+                                className="absolute right-3 top-4 text-warmgrey hover:text-CharcoalBlack transition-colors"
                             >
                                 {showPassword ? <IoEyeOffOutline className="h-4 w-4" /> : <IoEyeOutline className="h-4 w-4" />}
                             </button>
@@ -138,8 +144,10 @@ const SellerLogin = () => {
                     </div>
                 </div>
             </div>
+            {isforget && <ForgetPassword onclose={()=>setForget(false)} email={email}/>}
             <Toaster position="top-center" reverseOrder={false} />
         </div>
+        
     );
 };
 

@@ -4,12 +4,14 @@ import { IoEyeOffOutline, IoEyeOutline, IoMailOutline } from 'react-icons/io5';
 import { FiLock, FiUser } from 'react-icons/fi';
 import {Toaster,toast} from 'react-hot-toast'
 import axios from 'axios'
+import ForgetPassword from '../components/common/ForgetPassword';
 
 const Login = () => {
     const navigate = useNavigate()
     const [showPassword, setShowPassword] = useState(false);
     const [email,setEmail] = useState('')
     const [password,setPassword] = useState('')
+    const [isforget,setForget] = useState(false)
 
     useEffect(() => {
         localStorage.clear()
@@ -52,7 +54,11 @@ const Login = () => {
     };
 
     const handleForgotPassword = () => {
-        if(!email) toast.error('Please enter email to send otp')
+        if(!email){ 
+            toast.error('Please enter email to send otp')
+            setForget(false)
+        }
+        else setForget(true)
     };
 
     return (
@@ -82,7 +88,7 @@ const Login = () => {
                             Email Address
                         </label>
                         <div className="relative">
-                            <IoMailOutline className="absolute left-3 top-3 h-4 w-4 text-warmgrey" />
+                            <IoMailOutline className="absolute left-3 top-4 h-4 w-4 text-warmgrey" />
                             <input
                                 type="email"
                                 name="email"
@@ -99,7 +105,7 @@ const Login = () => {
                             Password
                         </label>
                         <div className="relative">
-                            <FiLock className="absolute left-3 top-3 h-4 w-4 text-warmgrey" />
+                            <FiLock className="absolute left-3 top-4 h-4 w-4 text-warmgrey" />
                             <input
                                 id="password"
                                 name="password"
@@ -112,7 +118,7 @@ const Login = () => {
                             <button
                                 type="button"
                                 onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-3 text-warmgrey hover:text-CharcoalBlack transition-colors"
+                                className="absolute right-3 top-4 text-warmgrey hover:text-CharcoalBlack transition-colors"
                             >
                                 {showPassword ? <IoEyeOffOutline className="h-4 w-4" /> : <IoEyeOutline className="h-4 w-4" />}
                             </button>
@@ -176,13 +182,14 @@ const Login = () => {
 
                     <button
                         type="button"
-                        onClick={()=> navigate('sellerlogin')}
+                        onClick={()=> navigate('/sellerlogin')}
                         className="text-sm bg-gradient-to-l from-gold to-gold/90 text-white px-6 py-2 rounded-full hover:opacity-90 transition-all duration-300 transform hover:scale-105 font-medium"
                     >
                         Become a Seller
                     </button>
                 </div>
             </div>
+            {isforget && <ForgetPassword onclose={()=>setForget(false)} email={email}/>}
             <Toaster position="top-center" reverseOrder={false} />
         </div>
     );

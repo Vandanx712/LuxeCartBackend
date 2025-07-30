@@ -13,7 +13,7 @@ async function sentOrderInfomail(seller) {
             pass: process.env.ADMIN_EMAIL_SCERECT_KEY
         }
     })
-    const orderhtml = fs.readFileSync(path.join('notification/order.html'),'utf-8').replace("#username#",seller.username)
+    const orderhtml = await fs.readFileSync(path.join('notification/order.html'),'utf-8').replace("#username#",seller.username)
 
     await transporter.sendMail({
         from:process.env.ADMIN_EMAIL,

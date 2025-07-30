@@ -15,7 +15,7 @@ async function sendWelcomeEmail(user) {
         },
     });
 
-    const welcomehtml = fs.readFileSync(path.join('notification/welcome.html'),'utf-8').replace("#username#",user.username)
+    const welcomehtml = await fs.readFileSync(path.join('notification/welcome.html'),'utf-8').replace("#username#",user.username)
     await transporter.sendMail({
         from: process.env.ADMIN_EMAIL,
         to: user.email,

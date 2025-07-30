@@ -8,6 +8,7 @@ import sendVerifyPasswordOtpEmail from "../notification/sentVerifyPasswordOtp.js
 import { ApiError } from "../utill/apierror.js";
 import { asynchandller } from "../utill/asynchandller.js";
 import bcrypt from 'bcrypt'
+import { generateotp } from "../utill/generateotp.js";
 
 
 export const findUserByEmail = async (email) => {
@@ -28,7 +29,7 @@ export const sendotp = asynchandller(async (req, res) => {
     const user = await findUserByEmail(email)
     if (!user) throw new ApiError(409, 'User not found plz enter valid email')
 
-    const otp = await generateotp()
+    const otp = generateotp()
 
     await Otp.create({
         userid: user.id,
@@ -82,7 +83,10 @@ export const updatePassword = asynchandller(async (req, res) => {
     user.password = await bcrypt.hash(password, 10)
     await user.save()
 
-    await Otp.findByIdAndDelete(checkOtp.id)
+    checkOtp.map(async(otp)=>{
+        await Otp.findByIdAndDelete(otp.id)
+    })
+    
     return res.status(200).json({
         message: 'Update password successfully'
     })

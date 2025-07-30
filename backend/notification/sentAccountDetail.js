@@ -17,7 +17,7 @@ async function sendAccountDetailEmail(user, password) {
     });
 
     const seller = await Seller.findById(user.createBy)
-    const html = fs.readFileSync(path.join('notification/getcredentials.html'), 'utf-8')
+    const html = await fs.readFileSync(path.join('notification/getcredentials.html'), 'utf-8')
         .replace("#name#", user.name)
         .replace("#username#", user.username)
         .replace("#email#", user.email)
