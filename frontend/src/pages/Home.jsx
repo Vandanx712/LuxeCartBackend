@@ -1,6 +1,5 @@
 import MainSlider from "../components/sliders/MainSlider";
 import Categories from "../components/common/Categories";
-import DiscountSlider from "../components/sliders/DiscountSlider";
 import CompanyLogoSlider from "../components/sliders/CompanyLogoSlider";
 import ProductCard from "../components/common/ProductCard";
 import { useState,useEffect } from "react";
@@ -25,11 +24,7 @@ const Home = () => {
   return (
     <>
       <MainSlider />
-      <div className=" m-10 flex items-center justify-center">
-        <h1 className=" text-3xl md:text-5xl font-Monrope bg-gradient-to-tl from-royalpurple to-DeepNavy bg-clip-text text-transparent">Categories</h1>
-      </div>
       <Categories />
-      <DiscountSlider />
       <div className=" m-10 flex items-center justify-center">
         <h1 className=" text-3xl md:text-5xl font-Monrope bg-gradient-to-tl from-royalpurple to-DeepNavy bg-clip-text text-transparent">Big Brands</h1>
       </div>

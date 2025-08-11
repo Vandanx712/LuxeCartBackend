@@ -11,6 +11,7 @@ const AccountPage = () => {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [buyer, setBuyer] = useState({})
     const [coins,setCoins] = useState(0)
+    const [orders,setOrders] = useState([])
     const [address,setAddress] = useState()
     const [username,setUsername] = useState(buyer.username)
     const [name,setName] = useState(buyer.name)
@@ -40,6 +41,7 @@ const AccountPage = () => {
         loadBuyer()
         loadCoin()
         loadAddress()
+        loadOrder()
     }, [])
     async function loadBuyer() {
         try {
@@ -78,6 +80,15 @@ const AccountPage = () => {
             setAddress(Address)
         } catch (error) {
             console.log(error)
+        }
+    }
+
+    const loadOrder = async()=>{
+        try {
+            const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/allorder`,{withCredentials:true})
+            setOrders(response.data.orders)
+        } catch (error) {
+           console.log(error) 
         }
     }
 
@@ -262,24 +273,34 @@ const AccountPage = () => {
                     <div className="max-w-4xl">
                         <h2 className="text-2xl font-Playfair font-medium text-CharcoalBlack mb-6">My Orders</h2>
                         <div className="space-y-4">
-                            {[1, 2, 3].map((order) => (
-                                <div key={order} className="bg-offwhite rounded-lg p-6 border border-warmgrey/20">
+                            {orders.map((order) => (
+                                <div key={order._id} className="bg-offwhite rounded-lg p-6 border border-warmgrey/20">
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
                                         <div>
-                                            <h3 className="font-Playfair font-medium text-CharcoalBlack">Order #{order}001</h3>
-                                            <p className="text-sm text-warmgrey font-Manrope">Placed on March {order + 10}, 2024</p>
+                                            <h3 className="font-Playfair text-deep-navy-dark">OrderId: {order._id} </h3>
+                                            <p className="text-sm text-warmgrey font-Manrope">Placed on: {order.placedon.split('T')[0]}</p>
                                         </div>
                                         <span className="bg-royalpurple/10 text-royalpurple px-3 py-1 rounded-full text-sm font-Manrope mt-2 sm:mt-0 w-fit">
-                                            Delivered
+                                            {order.order_status}
                                         </span>
                                     </div>
-                                    <div className="flex items-center space-x-4">
-                                        <div className="w-16 h-16 bg-warmgrey/20 rounded-lg"></div>
-                                        <div className="flex-1">
-                                            <p className="font-Manrope text-CharcoalBlack">Sample Product {order}</p>
-                                            <p className="text-sm text-warmgrey font-Manrope">Quantity: 1</p>
+                                    {order.items.map((item) => (
+                                        <div className="flex items-center space-x-5 space-y-5">
+                                            <div className="w-20 h-20 bg-warmgrey/20 rounded-lg"></div>
+                                            <div className="flex-1">
+                                                <p className="font-sans text-deep-navy-dark">{item.name}</p>
+                                                <span className='text-sm text-warmgrey font-sans'>{item.variantname}</span>
+                                                <div className=' flex space-x-2'>
+                                                    <label className='font-Monrope text-sm text-deep-navy-dark'>Quantity: </label>
+                                                    <span className=' font-sans text-warmgrey text-sm'>{item.quantity}</span>
+                                                </div>
+                                            </div>
+                                            <span className="font-Monrope text-lg text-CharcoalBlack">₹{item.price}</span>
                                         </div>
-                                        <p className="font-Playfair font-medium text-CharcoalBlack">${(order * 29.99).toFixed(2)}</p>
+                                    ))}
+                                    <div className=' flex space-x-2'> 
+                                        <label className='font-Monrope text-lg text-deep-navy-dark'>Total Price:</label>
+                                        <span className=' font-sans text-warmgrey text-lg'>₹{order.totalprice}</span>
                                     </div>
                                 </div>
                             ))}

@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer'
 import dotenv from 'dotenv'
-import fs from 'fs'
+import fs from 'fs/promises'
 import path from 'path'
 
 dotenv.config()
@@ -13,7 +13,7 @@ async function sentOrderInfomail(seller) {
             pass: process.env.ADMIN_EMAIL_SCERECT_KEY
         }
     })
-    const orderhtml = await fs.readFileSync(path.join('notification/order.html'),'utf-8').replace("#username#",seller.username)
+    const orderhtml = (await fs.readFile(path.join('./notification/order.html'),'utf-8')).replace("#username#",seller.username)
 
     await transporter.sendMail({
         from:process.env.ADMIN_EMAIL,

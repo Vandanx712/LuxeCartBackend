@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer'
 import dotenv from 'dotenv'
-import fs from 'fs'
+import fs from 'fs/promises'
 import path from 'path'
 
 dotenv.config()
@@ -15,7 +15,7 @@ async function sendWelcomeEmail(user) {
         },
     });
 
-    const welcomehtml = await fs.readFileSync(path.join('notification/welcome.html'),'utf-8').replace("#username#",user.username)
+    const welcomehtml = await fs.readFile(path.join('./notification/welcome.html'),'utf-8').replace("#username#",user.username)
     await transporter.sendMail({
         from: process.env.ADMIN_EMAIL,
         to: user.email,

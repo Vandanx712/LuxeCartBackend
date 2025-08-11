@@ -404,7 +404,7 @@ export const createOrderFromCart= asynchandller(async(req,res)=>{
         const seller = await Seller.findById(SellerId)
 
         if (variant.stock_count <= 1) {
-            await sentStockAlertEmail(seller.email,seller.username,product.name,variant.variant_name)
+            sentStockAlertEmail(seller.email,seller.username,product.name,variant.variant_name)
         }
 
         if(!groupedItems[SellerId]){
@@ -443,7 +443,7 @@ export const createOrderFromCart= asynchandller(async(req,res)=>{
 
         seller.orders.push(order._id)
         await seller.save()
-        await sentOrderInfomail(seller)
+        sentOrderInfomail(seller)
 
         if(payment_method !=='Cash on Delivery'){
             const razorpayOrder = await razorpayInstance.orders.create({
@@ -578,4 +578,86 @@ export const verifyPayment = asynchandller(async(req,res)=>{
         console.error("Payment verification failed:", err);
         return res.status(500).json({ error: "Payment verification failed" });
     }
+})
+
+export const getallOrder = asynchandller(async(req,res)=>{
+    const user = req.user 
+    const orders = await Order.aggregate([
+        {
+            $match:{
+                buyer: new mongoose.Types.ObjectId(user.id)
+            }
+        },
+        { $unwind: "$items" },
+        {
+            $lookup:{
+                from:'products',
+                localField:'items.product',
+                foreignField:'_id',
+                as:'product',
+                pipeline:[
+                    {
+                        $project:{
+                            name:true,
+                            images:true
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $lookup: {
+                from: 'productvariants',
+                localField: 'items.variant',
+                foreignField: '_id',
+                as: 'variant',
+                pipeline: [
+                    {
+                        $project: {
+                            variant_name: true,
+                            price: true,
+                            discount_price: true,
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            $unwind: {
+                path: "$product",
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $unwind: {
+                path: "$variant",
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $group: {
+                _id: "$_id",
+                buyer: { $first: "$buyer" },
+                seller: { $first: "$seller" },
+                totalprice: { $first: "$total_price" },
+                order_status:{$first:"$order_status"},
+                placedon:{$first:'$createdAt'},
+                items: {
+                    $push: {
+                        name: "$product.name",
+                        variantname: "$variant.variant_name",
+                        quantity: "$items.quantity",
+                        price:'$variant.price',
+                        discount_price:'$variant.discount_price',
+                        image:'$product.imges[0]'
+                    }
+                }
+            }
+        }
+    ])
+
+    return res.status(200).json({
+        message:'Fetch all order',
+        orders
+    })
 })

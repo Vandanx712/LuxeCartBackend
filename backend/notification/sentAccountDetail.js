@@ -1,7 +1,7 @@
 import nodemailer from 'nodemailer'
 import dotenv from 'dotenv'
 import { Seller } from '../models/seller/seller.model.js';
-import fs from 'fs'
+import fs from 'fs/promises'
 import path from 'path';
 
 dotenv.config()
@@ -17,7 +17,7 @@ async function sendAccountDetailEmail(user, password) {
     });
 
     const seller = await Seller.findById(user.createBy)
-    const html = await fs.readFileSync(path.join('notification/getcredentials.html'), 'utf-8')
+    const html = await fs.readFile(path.join('./notification/getcredentials.html'), 'utf-8')
         .replace("#name#", user.name)
         .replace("#username#", user.username)
         .replace("#email#", user.email)
