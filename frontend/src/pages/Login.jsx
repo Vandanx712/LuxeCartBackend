@@ -15,7 +15,16 @@ const Login = () => {
 
     useEffect(() => {
         localStorage.clear()
+        Logout()
     }, [])
+
+    const Logout = async()=>{
+        try {
+            await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/logout`,{},{withCredentials:true})
+        } catch (error) {
+            console.log(error)
+        }
+    }
 
     const handleSubmit = async(e) => {
         e.preventDefault();
@@ -41,6 +50,7 @@ const Login = () => {
         localStorage.setItem('username',user.username)
         localStorage.setItem('email',user.email)
         localStorage.setItem('role',user.role)
+        localStorage.setItem('expirytime',new Date().getDate() + 24 * 60 * 60 * 1000)
     }
 
     const handleGoogleLogin = async() => {

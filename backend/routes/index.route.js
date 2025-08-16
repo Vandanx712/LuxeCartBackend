@@ -1,6 +1,6 @@
 import { Router } from "express";
 import buyerRoute from "./buyer.route.js";
-import { getGoogleLoginCallback, getGoolgeLoginpage, getMe, login } from "../controllers/login.controller.js";
+import { getGoogleLoginCallback, getGoolgeLoginpage, getMe, login, logout } from "../controllers/login.controller.js";
 import sellerRouter from "./seller.route.js";
 import deliveryBoyRouter from "./deliveryBoy.route.js";
 import { addAddress, deleteAddress, getAddressById, getUserAllAddress, sendotp, updateAddress, updatePassword, verifyotp } from "../controllers/common.controller.js";
@@ -19,6 +19,7 @@ indexRoute.use('/seller',sellerRouter)
 indexRoute.use('/profilepic',profilepicRouter)
 indexRoute.use('/product',productRouter)
 indexRoute.post('/login',login)
+indexRoute.post('/logout',verifyjwt,logout)
 indexRoute.get('/googlelogin',getGoolgeLoginpage)   // google login
 indexRoute.get('/google/callback',getGoogleLoginCallback)
 indexRoute.get('/me',verifyjwt,getMe)

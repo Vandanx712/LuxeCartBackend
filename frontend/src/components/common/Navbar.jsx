@@ -22,8 +22,14 @@ const Navbar = () => {
 
   useEffect(() => {
 
-    const user = localStorage.getItem('id')
-    if (user) SetIsAccount(true)
+    const expirytime = localStorage.getItem('expirytime')
+    if(new Date().getDate() > Number(expirytime)){
+      localStorage.clear()
+      SetIsAccount(false)
+      Logout()
+    }else{
+      SetIsAccount(true)
+    }
 
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 30);
@@ -33,6 +39,14 @@ const Navbar = () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+   const Logout = async()=>{
+          try {
+              await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/logout`,{},{withCredentials:true})
+          } catch (error) {
+              console.log(error)
+          }
+      }
 
   async function loadCart() {
     try {

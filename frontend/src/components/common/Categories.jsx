@@ -1,9 +1,10 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const Categories = () => {
   const categories = [
     {
-      id: 1,
+      id: '680b61ca298fe21c4b614c2f',
       title: "Appliances",
       description: " Refrigerators, Washing Machines & More",
       image: 'https://i.pinimg.com/1200x/53/0b/73/530b73b40dbb92fb2c247b1f6c5ef76a.jpg',
@@ -11,7 +12,7 @@ const Categories = () => {
       textColor: "text-offwhite"
     },
     {
-      id: 2,
+      id: '680b610c2f2db366bd9cea50',
       title: "Fashion",
       description: "Clothing, Shoes & Accessories",
       image: 'https://i.pinimg.com/736x/12/22/47/1222478a9301cbe09a3ad16aef5f5813.jpg',
@@ -19,15 +20,15 @@ const Categories = () => {
       textColor: "text-offwhite"
     },
     {
-      id: 3,
-      title: "Home & Kitchen",
+      id: '680b6216298fe21c4b614c38',
+      title: "Home & Furniture",
       description: "Furniture, Appliances & Decor",
       image: 'https://i.pinimg.com/1200x/b9/13/49/b913490c7260c11d94cd18c143f6797a.jpg',
       bgColor: "bg-gradient-to-br from-emeraldgreen to-DeepNavy",
       textColor: "text-offwhite"
     },
     {
-      id: 4,
+      id: '68160b4e09a6b13f78c431f3',
       title: "Moblies",
       description: "Smartphones, Chargers & More",
       image: 'https://i.pinimg.com/1200x/99/64/a2/9964a202c67115b1f40714082848c312.jpg',
@@ -51,6 +52,7 @@ const Categories = () => {
       textColor: "text-offwhite"
     }
   ];
+  const navigate = useNavigate()
   return (
     <>
       <section className="py-16 px-4 bg-offwhite">
@@ -71,6 +73,7 @@ const Categories = () => {
               <div
                 key={category.id}
                 className="group relative overflow-hidden rounded-2xl shadow-elegant hover:shadow-hover transition-all duration-500 cursor-pointer transform hover:-translate-y-2"
+                onClick={()=>navigate(`/category/${category.id}/0`)}
               >
                 {/* Background Gradient */}
                 <div className={`${category.bgColor} absolute inset-0 z-10`} />

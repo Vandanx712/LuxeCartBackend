@@ -185,3 +185,12 @@ export const getMe = asynchandller(async(req,res)=>{
         user
     })
 })
+
+export const logout = asynchandller(async (req, res) => {
+    return res.status(200)
+        .cookie()
+        .cookie()
+        .json({
+            message: 'Logout successfully'
+        })
+})

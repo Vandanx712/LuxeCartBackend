@@ -45,8 +45,19 @@ function CategoryProducts() {
 
   const loadproducts = async (ans) => {
     try {
+      if(id == 0) loadcatproduct()
       const catid = ans == true ? pcid : selectedSubCategory
       const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/product/searchby/${catid}`)
+      setFilteredProducts(response.data.products)
+      setTotalProduct(response.data.totalproducts)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const loadcatproduct = async()=>{
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/product/searchby/${pcid}`)
       setFilteredProducts(response.data.products)
       setTotalProduct(response.data.totalproducts)
     } catch (error) {
