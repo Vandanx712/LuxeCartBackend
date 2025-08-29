@@ -4,6 +4,7 @@ import { useState,useEffect } from 'react';
 import { FiArrowLeft, FiShoppingBag, FiX } from 'react-icons/fi';
 import { useSelector, useDispatch } from 'react-redux'
 import { setcartitems } from '../../redux/cartslice'
+import {setorderitems,settotalprice} from '../../redux/order'
 import { useNavigate } from 'react-router-dom';
 
 const CartModal = () => {
@@ -96,6 +97,12 @@ const CartModal = () => {
         } catch (error) {
             console.log(error)
         }
+    }
+
+    const checkout =()=>{
+        dispatch(setorderitems(cart))
+        dispatch(settotalprice(totalprice))
+        navigate('/createorder')
     }
 
     return (
@@ -257,7 +264,7 @@ const CartModal = () => {
                                                 {shippingNote}
                                             </p>
                                         </div>
-                                        <button className="w-full bg-royalpurple hover:bg-royalpurple/90 text-white font-Manrope py-4 text-lg rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]">
+                                        <button className="w-full bg-royalpurple hover:bg-royalpurple/90 text-white font-Manrope py-4 text-lg rounded-xl transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]" onClick={checkout}>
                                             Proceed to Checkout
                                         </button>
                                         <button

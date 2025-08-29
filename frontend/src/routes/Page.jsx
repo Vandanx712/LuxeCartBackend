@@ -12,6 +12,7 @@ import CategoryProducts from "../components/common/CategoryProducts";
 import Signup from "../pages/Signup";
 import LoginSuccess from "../components/common/LoginSuccess";
 import SellerSignup from "../pages/SellerSignup";
+import Order from "../components/buyer/Order";
 
 const Page = () => {
   const PrivateRoute = ({ children }) => {
@@ -30,6 +31,7 @@ const Page = () => {
         <Route path="/buyer/cart" element={<CartModal/>} />
         <Route path="/buyer/wishlist" element={<PrivateRoute><Wishlist/></PrivateRoute>}/>
         <Route path="/buyer" element={<PrivateRoute><AccountPage/></PrivateRoute>}/>
+        <Route path="/createorder" element={<PrivateRoute><Order/></PrivateRoute>}/>
         <Route path="/" element={<Layout />} >
           <Route path="" element={<Home />} />
           <Route path="products" element={<Products/>}/>

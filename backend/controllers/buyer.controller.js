@@ -398,8 +398,8 @@ export const createOrderFromCart= asynchandller(async(req,res)=>{
     const groupedItems = {}
 
     for(const item of items){
-        const product = await Product.findById(item.productId)
-        const variant = await ProductVariant.findById(item.variantId)
+        const product = await Product.findById(item.pid)
+        const variant = await ProductVariant.findById(item.vid)
         const SellerId = product.seller.toString()
         const seller = await Seller.findById(SellerId)
 
@@ -418,15 +418,15 @@ export const createOrderFromCart= asynchandller(async(req,res)=>{
         
         const orderItems = await Promise.all(
             sellerItems.map(async(item)=>{
-                const variant = await ProductVariant.findById(item.variantId)
+                const variant = await ProductVariant.findById(item.vid)
                 const orderItem = await Orderitem.create({
-                    product:item.productId,
-                    variant:item.variantId,
-                    quantity:item.quantity,
+                    product:item.pid,
+                    variant:item.vid,
+                    quantity:item.qty,
                     price:variant.discount_price
                 })
-                totalprice += variant.discount_price*item.quantity
-                variant.stock_count -= item.quantity
+                totalprice += variant.discount_price*item.qty
+                variant.stock_count -= item.qty
                 await variant.save()
                 return orderItem
             })
