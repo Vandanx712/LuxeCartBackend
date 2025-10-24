@@ -27,7 +27,7 @@ const SellerLogin = () => {
             },{withCredentials:true}) 
             setLocalStorage(response.data.seller)
             toast.success(response.data.message)
-            navigate('/sdeshboard')
+            navigate('/sdashboard')
         } catch (error) {
             console.log(error)
             toast.error(error.response?.data.message)
@@ -35,7 +35,7 @@ const SellerLogin = () => {
     };
 
     function setLocalStorage(user){
-        localStorage.setItem('id',user.id)
+        localStorage.setItem('id',user._id)
         localStorage.setItem('username',user.username)
         localStorage.setItem('name',user.name)
         localStorage.setItem('email',user.email)

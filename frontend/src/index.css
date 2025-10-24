@@ -9,14 +9,14 @@
   --color-gold: #D4AF37;
   --color-royalpurple: #5E3A9A;
   --color-emeraldgreen: #2E7D32;
-  --color-offwhite :#F8F8F8;
+  --color-offwhite: #F8F8F8;
   --color-warmgrey: #A8A29E;
   --color-deep-navy-dark: #1B1B3A;
 }
 
 @theme {
   --font-Monrope: 'Manrope';
-  --font-Playfair:'Playfair'
+  --font-Playfair: 'Playfair'
 }
 
 body {

@@ -174,6 +174,7 @@ const Navbar = () => {
         <nav className="flex flex-col p-4 space-y-2 text-xl">
           <Link
             to='/'
+            onClick={()=>setIsMobileMenuOpen(false)}
             className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gold/10 transition-colors duration-300"
           >
             <FiHome className="h-6 w-6 text-DeepNavy" />

@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Home from "../pages/Home";
 import Layout from "../pages/Layout";
 import Login from "../pages/Login";
@@ -13,11 +13,13 @@ import Signup from "../pages/Signup";
 import LoginSuccess from "../components/common/LoginSuccess";
 import SellerSignup from "../pages/SellerSignup";
 import Order from "../components/buyer/Order";
+import SellerDashboard from "../pages/SellerDashboard";
 
 const Page = () => {
   const PrivateRoute = ({ children }) => {
     const islogin = localStorage.getItem('id')
-    return islogin ? children : <Navigate to='/' />
+    const role = localStorage.getItem('role')
+    return islogin ? children : role=='buyer' ? <Navigate to='/' /> : <Navigate to='/login'/>
   }
 
   return (
@@ -38,6 +40,7 @@ const Page = () => {
           <Route path="product/:id" element={<Product/>}/>
           <Route path="category/:pcid/:scid" element={<CategoryProducts/>}/>
         </Route>
+        <Route path="/sdashboard" element={<PrivateRoute><SellerDashboard/></PrivateRoute>}/>
       </Routes>
     </BrowserRouter>
   );
