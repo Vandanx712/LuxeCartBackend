@@ -14,6 +14,7 @@ import { Product } from "../models/product/product.model.js";
 import { Order } from '../models/order/order.model.js'
 import sentOrderInfoForBoy from "../notification/sentOrderInfoForBoy.js";
 import mongoose from "mongoose";
+import { Buyer } from "../models/buyer/buyer.model.js";
 
 
 
@@ -521,14 +522,15 @@ export const getOrderById = asynchandller(async (req, res) => {
 
 
 export const assignOrder = asynchandller(async(req,res)=>{
-    const {deliveryboyId} = req.params
+    const {deliveryboyId,orderId} = req.body
     const sellerId = req.user.id
 
+    if([deliveryboyId,orderId].some((field)=>field==='')) throw ApiError(409,'Plz fill all field')
     if(!deliveryboyId) throw new ApiError(400,'DeliveryBoy id is required')
     const deliveryboy = await DeliveryBoy.findById(deliveryboyId)
     if(!deliveryboy || deliveryboy.is_ondelivery==true) throw new ApiError(404,'DeliveryBoy not found or he is on delivery')
     
-    const order = await Order.findOneAndUpdate({seller:sellerId},{$set:{delivery_boy:deliveryboyId,order_status:"Shipped"}},{new:true})
+    const order = await Order.findOneAndUpdate({seller:sellerId,_id:orderId},{$set:{delivery_boy:deliveryboyId,order_status:"Shipped"}},{new:true})
     if(!order) throw new ApiError(404,'Order not found')
     
     await sentOrderInfoForBoy(deliveryboy)
@@ -537,4 +539,61 @@ export const assignOrder = asynchandller(async(req,res)=>{
         message:'Order assign for deliveryBoy successfully',
         order
     })
+})
+
+
+// Seller Dashboard Part
+
+export const orderlist = asynchandller(async(req,res)=>{
+    const sellerId = req.user.id
+
+    const sellerorders = await Order.find({seller:sellerId}).select('buyer seller items total_price order_status createdAt').sort({ createdAt: -1 })
+
+    const orders = await Promise.all(
+        sellerorders.map(async (order) => {
+            const buyername = await Buyer.findById(order.buyer).select('name')
+            const processing = await Order.countDocuments({ order_status: 'Processing' })
+            const shipped = await Order.countDocuments({ order_status: 'Shipped' })
+            const delivered = await Order.countDocuments({ order_status: 'Delivered' })
+
+            const product = await Product.findById(order.items[0].product).select('name')
+            const productname = order.items.length > 1 ? product.name + ' & more' : product.name
+
+            let time = 'just Now'
+
+            const ordertime = new Date(order.createdAt)
+            const nowtime = new Date()
+            const diffMs = nowtime - ordertime
+            const diffSeconds = Math.floor(diffMs / 1000);
+            const diffMinutes = Math.floor(diffSeconds / 60);
+            const diffHours = Math.floor(diffMinutes / 60);
+            const diffDays = Math.floor(diffHours / 24);
+            
+            if(diffMinutes > 0) time = `${diffMinutes} minute${diffMinutes >1 ? 's':''} ago`
+            if(diffHours > 0) time = `${diffHours} hour${diffHours >1 ? 's':''} ago`
+            if(diffDays > 0) time = `${diffDays} day${diffDays >1 ? 's':''} ago`
+
+            let singleOrder = {
+                orderid: order.id,
+                seller: order.seller,
+                buyer: buyername.name,
+                products: productname,
+                totalprice: order.total_price,
+                totalorders: sellerorders.length,
+                processing: processing ?? 0,
+                shipped: shipped ?? 0,
+                delivered: delivered ?? 0,
+                time
+            }
+            return singleOrder
+        })
+    )
+    return res.status(200).json({
+        message:'Order list fetch successfully',
+        orders
+    })
+})
+
+export const productlist = asynchandller(async(req,res)=>{
+    
 })
