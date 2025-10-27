@@ -16,7 +16,16 @@ const SellerLogin = () => {
 
     useEffect(() => {
         localStorage.clear()
+        Logout()
     }, [])
+
+    const Logout = async()=>{
+        try {
+            await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/logout`,{},{withCredentials:true})
+        } catch (error) {
+            console.log(error)
+        }
+    }
 
     const handleSubmit = async(e) => {
         e.preventDefault();

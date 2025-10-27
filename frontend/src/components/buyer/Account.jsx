@@ -237,7 +237,6 @@ const AccountPage = () => {
                                             setHideButton(false)
                                             const newValue = e.target.value;
                                             setEmail(newValue);
-                                            console.log(e.target.value,'target')
                                             setHideButton(newValue === buyer.email);
                                         }}
                                         className="w-full px-3 py-2 border bg-white border-warmgrey/30 rounded-md font-Manrope focus:outline-none focus:border-royalpurple"

@@ -15,6 +15,7 @@ import { Order } from '../models/order/order.model.js'
 import sentOrderInfoForBoy from "../notification/sentOrderInfoForBoy.js";
 import mongoose from "mongoose";
 import { Buyer } from "../models/buyer/buyer.model.js";
+import { Category } from "../models/admin/category.model.js";
 
 
 
@@ -532,6 +533,8 @@ export const assignOrder = asynchandller(async(req,res)=>{
     
     const order = await Order.findOneAndUpdate({seller:sellerId,_id:orderId},{$set:{delivery_boy:deliveryboyId,order_status:"Shipped"}},{new:true})
     if(!order) throw new ApiError(404,'Order not found')
+    deliveryboy.is_ondelivery=true
+    await deliveryboy.save()
     
     await sentOrderInfoForBoy(deliveryboy)
 
@@ -552,10 +555,6 @@ export const orderlist = asynchandller(async(req,res)=>{
     const orders = await Promise.all(
         sellerorders.map(async (order) => {
             const buyername = await Buyer.findById(order.buyer).select('name')
-            const processing = await Order.countDocuments({ order_status: 'Processing' })
-            const shipped = await Order.countDocuments({ order_status: 'Shipped' })
-            const delivered = await Order.countDocuments({ order_status: 'Delivered' })
-
             const product = await Product.findById(order.items[0].product).select('name')
             const productname = order.items.length > 1 ? product.name + ' & more' : product.name
 
@@ -571,29 +570,100 @@ export const orderlist = asynchandller(async(req,res)=>{
             
             if(diffMinutes > 0) time = `${diffMinutes} minute${diffMinutes >1 ? 's':''} ago`
             if(diffHours > 0) time = `${diffHours} hour${diffHours >1 ? 's':''} ago`
-            if(diffDays > 0) time = `${diffDays} day${diffDays >1 ? 's':''} ago`
+            if (diffDays > 0) time = `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
 
-            let singleOrder = {
+            return {
                 orderid: order.id,
                 seller: order.seller,
                 buyer: buyername.name,
                 products: productname,
+                totalitem:order.items.length,
                 totalprice: order.total_price,
-                totalorders: sellerorders.length,
-                processing: processing ?? 0,
-                shipped: shipped ?? 0,
-                delivered: delivered ?? 0,
+                status:order.order_status,
                 time
             }
-            return singleOrder
         })
     )
+    const totalorder = orders.length
+    const processing = orders.filter((order)=>order.status=='Processing').length
+    const shipped = orders.filter((order)=>order.status=='Shipped').length
+    const delivered = orders.filter((order)=>order.status=='Delivered').length
     return res.status(200).json({
         message:'Order list fetch successfully',
+        totalorder,
+        processing,
+        shipped,
+        delivered,
         orders
     })
 })
 
 export const productlist = asynchandller(async(req,res)=>{
+    const sellerId = req.user.id
     
+    const sellerProducts = await Product.find({seller:sellerId}).select('seller _id name price discount category variants').sort({ createdAt: -1 })
+    
+    const products = await Promise.all(
+        sellerProducts.map(async (product)=>{
+            const category = await Category.findById(product.category).select('name')
+            let totalstock = 0
+            for(let variant of product.variants){
+                const vari = await ProductVariant.findById(variant).select('stock_count')
+                totalstock += vari.stock_count
+            }
+            return {
+                productId: product.id,
+                seller: product.seller,
+                name: product.name,
+                price: product.price,
+                discount: product.discount,
+                procategory: category.name,
+                totalstock,
+            }
+        })
+    )
+    const totalproduct = products.length
+    const instock = products.filter((product)=>product.totalstock >= 5).length
+    const lowstock = products.filter((product)=> product.totalstock < 5).length
+    const outofstock = products.filter((product)=>product.totalstock == 0).length
+    return res.status(200).json({
+        message:'Product list fetch succesfully',
+        totalproduct,
+        instock,
+        lowstock,
+        outofstock,
+        products
+    })
+})
+
+export const deliveryboylist = asynchandller(async(req,res)=>{
+    const sellerId = req.user.id
+
+    const Deliveryboys = await DeliveryBoy.find({createBy:sellerId}).select('username _id name phone email vehicle_type is_ondelivery profileImg createBy').sort({ createdAt: -1 })
+    const totaldeliveryboy = Deliveryboys.length
+    const free = Deliveryboys.filter((boy)=>boy.is_ondelivery == false).length
+    const ondelivery = Deliveryboys.filter((boy)=>boy.is_ondelivery == true).length
+    const deliveryboys = await Promise.all(
+        Deliveryboys.map(async(boy)=>{
+            const orders = (await Order.find({delivery_boy:boy.id,order_status:'Delivered'}).select('id')).length
+            return {
+                "_id": boy.id,
+                "username": boy.username,
+                "name": boy.name,
+                "email": boy.email,
+                "phone": boy.phone,
+                "vehicle_type": boy.vehicle_type,
+                "is_ondelivery": boy.is_ondelivery,
+                "createBy": boy.createBy,
+                orders
+            }
+        })
+    )
+    return res.status(200).json({
+        message:'Deliveryboy list fetch successfully',
+        totaldeliveryboy,
+        free,
+        ondelivery,
+        deliveryboys
+    })
 })

@@ -8,19 +8,11 @@ import {
   FiArrowDown,
   FiHome,
   FiPackage,
-  FiBarChart,
-  FiSettings,
-  FiBell,
   FiSearch,
-  FiMessageSquare,
-  FiChevronDown,
   FiPlus,
-  FiUpload,
-  FiDownload,
-  FiTag,
   FiEye,
   FiTruck,
-  FiCheck, FiCalendar,
+  FiCheck,
   FiX,
   FiMenu,
   FiFilter,
@@ -30,11 +22,12 @@ import {
   FiPhone,
   FiUser,
   FiLock,
-  FiCreditCard,
-  FiGlobe,
   FiLogOut
 } from 'react-icons/fi'
 import { Link } from 'react-router-dom';
+import axios from 'axios'
+import { toast,Toaster } from 'react-hot-toast';
+
 
 
 function SellerDashboard() {
@@ -47,11 +40,117 @@ function SellerDashboard() {
     { icon: FiUsers, label: 'Deliveryboys' }
   ])
   const [activesection, setactivesection] = useState('Dashboard')
+  const [totalorder,setTotalorder] = useState(0)
+  const [processing,setProcessing] = useState(0)
+  const [shipped,setShipped] = useState(0)
+  const [delivered,setDelivered] = useState(0)
+  const [totalproduct,setTotalproduct] = useState(0)
+  const [instock,setInstock] = useState(0)
+  const [lowstock,setLowstock] = useState(0)
+  const [outstock,setOutstock] = useState(0)
+  const [totaldeliveryboy,setTotaldeliveryboy] = useState(0)
+  const [free,setFree] = useState(0)
+  const [ondelivery,setOndelivery] = useState(0)
+  const [orders,setorder] = useState([])
+  const [products,setProducts] = useState([])
+  const [deliveyboys,setDeliveryboy] = useState([])
+  const [recentorders,setRecentorders] = useState([])
+  const [name,setName] = useState('')
+  const [username,setUsername] = useState('')
+  const [email,setEmail] = useState('')
+  const [phone,setPhone] = useState(0)
+  const [shopname,setShopname] = useState('')
+  const [hidebutton,setHideButton] = useState(true)
+  const [seller,setSeller] = useState({})
 
+
+  const sellerId = localStorage.getItem('id')
 
   const selectedoption = (label) => {
     setactivesection(label)
     setIsSidebarOpen(false)
+  }
+
+  useEffect(()=>{
+    loadOrderlist()
+    loadProductlist()
+    loadDeliveryboylist()
+    loadSellerDetail()
+  },[])
+
+  const loadOrderlist = async()=>{
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/seller/getorderlist`,{withCredentials:true})
+      setorder(response.data.orders)
+      setTotalorder(response.data.totalorder)
+      setProcessing(response.data.processing)
+      setShipped(response.data.shipped)
+      setDelivered(response.data.delivered)
+      setRecentorders(response.data.orders.slice(0,6))
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const loadProductlist = async()=>{
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/seller/getproductlist`,{withCredentials:true})
+      setProducts(response.data.products)
+      setTotalproduct(response.data.totalproduct)
+      setInstock(response.data.instock)
+      setLowstock(response.data.lowstock)
+      setOutstock(response.data.outofstock)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const loadDeliveryboylist = async()=>{
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/seller/getdeliveryboylist`,{withCredentials:true})
+      setDeliveryboy(response.data.deliveryboys)
+      setTotaldeliveryboy(response.data.totaldeliveryboy)
+      setFree(response.data.free)
+      setOndelivery(response.data.ondelivery)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const loadSellerDetail=async()=>{
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/seller/getdetail/${sellerId}`,{withCredentials:true})
+      setSeller(response.data.seller)
+      setUsername(response.data.seller.username)
+      setName(response.data.seller.name)
+      setEmail(response.data.seller.email)
+      setPhone(response.data.seller.phone)
+      setShopname(response.data.seller.shopname)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const updateDetail = async () => {
+    const emailvalid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (emailvalid.test(email) === false) toast.error('Plz enter valid email')
+    else {
+      try {
+        const response = await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/seller/update`, {
+          username,
+          name,
+          email,
+          phone,
+          shopname
+        }, { withCredentials: true })
+        toast.success(response.data.message)
+        setSeller(response.data.updatedSeller)
+        setHideButton(true)
+      } catch (error) {
+        toast.error(error.response?.data.message)
+        console.log(error)
+      }
+    }
   }
 
   // Metrics data
@@ -90,181 +189,6 @@ function SellerDashboard() {
     }
   ];
 
-  const orders = [
-    {
-      id: '#ORD-2024-001',
-      customer: 'Sarah Johnson',
-      product: 'Premium Leather Wallet',
-      amount: '$89.99',
-      status: 'Processing',
-      statusColor: 'bg-gold/10 text-gold',
-      date: '2 hours ago'
-    },
-    {
-      id: '#ORD-2024-002',
-      customer: 'Mike Chen',
-      product: 'Wireless Headphones',
-      amount: '$199.99',
-      status: 'Shipped',
-      statusColor: 'bg-royalpurple/10 text-royalpurple',
-      date: '4 hours ago'
-    },
-    {
-      id: '#ORD-2024-003',
-      customer: 'Emma Davis',
-      product: 'Smart Watch Series 5',
-      amount: '$299.99',
-      status: 'Delivered',
-      statusColor: 'bg-emeraldgreen/10 text-emeraldgreen',
-      date: '1 day ago'
-    },
-    {
-      id: '#ORD-2024-004',
-      customer: 'Alex Rodriguez',
-      product: 'Gaming Keyboard',
-      amount: '$149.99',
-      status: 'Processing',
-      statusColor: 'bg-gold/10 text-gold',
-      date: '1 day ago'
-    },
-    {
-      id: '#ORD-2024-005',
-      customer: 'Lisa Wang',
-      product: 'Bluetooth Speaker',
-      amount: '$79.99',
-      status: 'Shipped',
-      statusColor: 'bg-royalpurple/10 text-royalpurple',
-      date: '2 days ago'
-    }
-  ];
-
-  const products = [
-    {
-      id: 'PRD-001',
-      name: 'Premium Leather Wallet',
-      category: 'Accessories',
-      price: '$89.99',
-      stock: 45,
-      status: 'In Stock',
-      statusColor: 'bg-emeraldgreen/10 text-emeraldgreen'
-    },
-    {
-      id: 'PRD-002',
-      name: 'Wireless Headphones',
-      category: 'Electronics',
-      price: '$199.99',
-      stock: 23,
-      status: 'In Stock',
-      statusColor: 'bg-emeraldgreen/10 text-emeraldgreen'
-    },
-    {
-      id: 'PRD-003',
-      name: 'Smart Watch Series 5',
-      category: 'Electronics',
-      price: '$299.99',
-      stock: 8,
-      status: 'Low Stock',
-      statusColor: 'bg-gold/20 text-gold'
-    },
-    {
-      id: 'PRD-004',
-      name: 'Gaming Keyboard',
-      category: 'Electronics',
-      price: '$149.99',
-      stock: 67,
-      status: 'In Stock',
-      statusColor: 'bg-emeraldgreen/10 text-emeraldgreen'
-    },
-    {
-      id: 'PRD-005',
-      name: 'Bluetooth Speaker',
-      category: 'Electronics',
-      price: '$79.99',
-      stock: 0,
-      status: 'Out of Stock',
-      statusColor: 'bg-red-200 text-red-500'
-    },
-    {
-      id: 'PRD-006',
-      name: 'Laptop Stand',
-      category: 'Accessories',
-      price: '$45.99',
-      stock: 34,
-      status: 'In Stock',
-      statusColor: 'bg-emeraldgreen/10 text-emeraldgreen'
-    }
-  ];
-
-  const customers = [
-    {
-      id: 'CUST-001',
-      name: 'Sarah Johnson',
-      email: 'sarah.j@email.com',
-      phone: '+1 (555) 123-4567',
-      location: 'New York, USA',
-      orders: 12,
-      spent: '$1,245.50',
-      status: 'Active',
-      statusColor: 'bg-emeraldgreen/10 text-emeraldgreen'
-    },
-    {
-      id: 'CUST-002',
-      name: 'Mike Chen',
-      email: 'mike.chen@email.com',
-      phone: '+1 (555) 234-5678',
-      location: 'Los Angeles, USA',
-      orders: 8,
-      spent: '$890.25',
-      status: 'Active',
-      statusColor: 'bg-emeraldgreen/10 text-emeraldgreen'
-    },
-    {
-      id: 'CUST-003',
-      name: 'Emma Davis',
-      email: 'emma.d@email.com',
-      phone: '+1 (555) 345-6789',
-      location: 'Chicago, USA',
-      orders: 15,
-      spent: '$2,156.75',
-      status: 'VIP',
-      statusColor: 'bg-gold text-CharcoalBlack'
-    },
-    {
-      id: 'CUST-004',
-      name: 'Alex Rodriguez',
-      email: 'alex.r@email.com',
-      phone: '+1 (555) 456-7890',
-      location: 'Miami, USA',
-      orders: 5,
-      spent: '$567.30',
-      status: 'Active',
-      statusColor: 'bg-emeraldgreen/10 text-emeraldgreen'
-    },
-    {
-      id: 'CUST-005',
-      name: 'Lisa Wang',
-      email: 'lisa.w@email.com',
-      phone: '+1 (555) 567-8901',
-      location: 'San Francisco, USA',
-      orders: 3,
-      spent: '$345.00',
-      status: 'Active',
-      statusColor: 'bg-emeraldgreen/10 text-emeraldgreen'
-    },
-    {
-      id: 'CUST-006',
-      name: 'David Kim',
-      email: 'david.k@email.com',
-      phone: '+1 (555) 678-9012',
-      location: 'Seattle, USA',
-      orders: 20,
-      spent: '$3,450.80',
-      status: 'VIP',
-      statusColor: 'bg-gold text-CharcoalBlack'
-    }
-  ];
-
-
   const getChangeColor = (changeType) => {
     switch (changeType) {
       case 'positive':
@@ -277,6 +201,30 @@ function SellerDashboard() {
         return 'text-warmgrey';
     }
   };
+
+  const getOrderStatusColor = (status)=>{
+    switch(status){
+      case 'Processing':
+        return 'bg-gold/10 text-gold';
+      case 'Shipped':
+        return 'bg-royalpurple/10 text-royalpurple';
+      case 'Delivered':
+        return 'bg-emeraldgreen/10 text-emeraldgreen';
+      default:
+        return 'bg-gold/10 text-gold';
+    }
+  }
+
+  const getProductStatusColor = (stock)=>{
+      if(stock>=5) return {color:'bg-emeraldgreen/10 text-emeraldgreen',status:'In Stock'};
+      else if(stock<5) return {color:'bg-gold/20 text-gold',status:'Low Stock'};
+      else if(stock==0) return {color:'bg-red-200 text-red-500',status:'Out of Stock'};
+  }
+
+  const getBoyStatusColor=(status)=>{
+    if(status==true) return {color:'bg-gold text-CharcoalBlack',Status:'On Delivery'}
+    else if(status==false) return {color:'bg-emeraldgreen/10 text-emeraldgreen',Status:'Free'}
+  }
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -341,28 +289,28 @@ function SellerDashboard() {
               </div>
 
               <div className="space-y-3 lg:space-y-4">
-                {orders.map((order, index) => (
+                {recentorders.map((order) => (
                   <div
-                    key={index}
+                    key={order.orderid}
                     className="flex flex-col sm:flex-row items-start sm:items-center gap-4 lg:gap-6 p-4 lg:p-6 hover:bg-offwhite rounded-xl lg:rounded-2xl transition-all duration-300 cursor-pointer border border-transparent hover:border-royalpurple/20 group"
                   >
-                    <div className={`p-2 lg:p-3 rounded-xl lg:rounded-2xl ${order.statusColor} flex items-center justify-center shadow-md group-hover:scale-110 transition-all duration-300 flex-shrink-0`}>
+                    <div className={`p-2 lg:p-3 rounded-xl lg:rounded-2xl ${getOrderStatusColor(order.status)} flex items-center justify-center shadow-md group-hover:scale-110 transition-all duration-300 flex-shrink-0`}>
                       {getStatusIcon(order.status)}
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-2 lg:gap-3 mb-2">
-                        <p className="font-bold text-CharcoalBlack text-base lg:text-lg">{order.id}</p>
-                        <span className={`px-2 lg:px-3 py-1 lg:py-1.5 rounded-full text-xs lg:text-sm font-bold ${order.statusColor} shadow-sm inline-block w-fit`}>
+                        <p className="font-bold text-CharcoalBlack text-base lg:text-lg">{order.orderid}</p>
+                        <span className={`px-2 lg:px-3 py-1 lg:py-1.5 rounded-full text-xs lg:text-sm font-bold ${getOrderStatusColor(order.status)} shadow-sm inline-block w-fit`}>
                           {order.status}
                         </span>
                       </div>
-                      <p className="text-warmgrey font-medium text-sm lg:text-base">{order.customer} • {order.product}</p>
+                      <p className="text-warmgrey font-medium text-sm lg:text-base">{order.buyer} • {order.products}• {order.totalitem} items</p>
                     </div>
 
                     <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start w-full sm:w-auto gap-2">
-                      <p className="font-bold text-CharcoalBlack text-lg lg:text-xl">{order.amount}</p>
-                      <p className="text-warmgrey font-medium text-sm lg:text-base">{order.date}</p>
+                      <p className="font-bold text-CharcoalBlack text-lg lg:text-xl">₹{order.totalprice}</p>
+                      <p className="text-warmgrey font-medium text-sm lg:text-base">{order.time}</p>
                     </div>
 
                     <button className="p-2 lg:p-3 hover:bg-gold/10 rounded-xl lg:rounded-2xl transition-all duration-300 group-hover:scale-110 flex-shrink-0">
@@ -374,7 +322,6 @@ function SellerDashboard() {
             </div>
           </div>
         );
-
       case 'Orders':
         return (
           <div className="flex-1 p-4 lg:p-8 space-y-6 lg:space-y-8 overflow-auto">
@@ -403,7 +350,7 @@ function SellerDashboard() {
                   </div>
                 </div>
                 <p className="text-sm text-warmgrey font-medium mb-1">Processing</p>
-                <p className="text-3xl font-bold text-CharcoalBlack">324</p>
+                <p className="text-3xl font-bold text-CharcoalBlack">{processing}</p>
               </div>
 
               <div className="bg-offwhite backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-1 hover:border-royalpurple/40 cursor-pointer relative overflow-hidden">
@@ -413,7 +360,7 @@ function SellerDashboard() {
                   </div>
                 </div>
                 <p className="text-sm text-warmgrey font-medium mb-1">Shipped</p>
-                <p className="text-3xl font-bold text-CharcoalBlack">156</p>
+                <p className="text-3xl font-bold text-CharcoalBlack">{shipped}</p>
               </div>
 
               <div className="bg-offwhite backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-1 hover:border-royalpurple/40 cursor-pointer relative overflow-hidden">
@@ -423,7 +370,7 @@ function SellerDashboard() {
                   </div>
                 </div>
                 <p className="text-sm text-warmgrey font-medium mb-1">Delivered</p>
-                <p className="text-3xl font-bold text-CharcoalBlack">767</p>
+                <p className="text-3xl font-bold text-CharcoalBlack">{delivered}</p>
               </div>
 
               <div className="bg-offwhite backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-1 hover:border-royalpurple/40 cursor-pointer relative overflow-hidden">
@@ -433,7 +380,7 @@ function SellerDashboard() {
                   </div>
                 </div>
                 <p className="text-sm text-warmgrey font-medium mb-1">Total Orders</p>
-                <p className="text-3xl font-bold text-CharcoalBlack">1,247</p>
+                <p className="text-3xl font-bold text-CharcoalBlack">{totalorder}</p>
               </div>
             </div>
 
@@ -453,28 +400,28 @@ function SellerDashboard() {
             <div className="bg-offwhite backdrop-blur-sm border border-gray-300 rounded-2xl p-6 shadow-lg hover:shadow-xl hover:border-royalpurple/30 transition-all duration-500 hover:-translate-y-1">
               <h3 className="text-2xl font-semibold text-CharcoalBlack mb-6">All Orders</h3>
               <div className="space-y-4">
-                {orders.map((order, index) => (
+                {orders.map((order) => (
                   <div
-                    key={index}
+                    key={order.orderid}
                     className="flex flex-col sm:flex-row items-start sm:items-center gap-4 lg:gap-6 p-6 hover:bg-offwhite-hover rounded-2xl transition-all duration-300 cursor-pointer border border-transparent hover:border-royalpurple/20 group"
                   >
-                    <div className={`p-3 rounded-xl ${order.statusColor} flex items-center justify-center shadow-md group-hover:scale-110 transition-all duration-300`}>
+                    <div className={`p-3 rounded-xl ${getOrderStatusColor(order.status)} flex items-center justify-center shadow-md group-hover:scale-110 transition-all duration-300`}>
                       {getStatusIcon(order.status)}
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-2 lg:gap-3 mb-2">
-                        <p className="font-bold text-CharcoalBlack text-lg">{order.id}</p>
-                        <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${order.statusColor} shadow-sm inline-block w-fit`}>
+                        <p className="font-bold text-CharcoalBlack text-lg">{order.orderid}</p>
+                        <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${getOrderStatusColor(order.status)} shadow-sm inline-block w-fit`}>
                           {order.status}
                         </span>
                       </div>
-                      <p className="text-warmgrey font-medium">{order.customer} • {order.product}</p>
+                      <p className="text-warmgrey font-medium">{order.buyer} • {order.products} • {order.totalitem} items</p>
                     </div>
 
                     <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start w-full sm:w-auto gap-2">
-                      <p className="font-semibold text-CharcoalBlack text-xl">{order.amount}</p>
-                      <p className="text-warmgrey font-medium text-sm">{order.date}</p>
+                      <p className="font-semibold text-CharcoalBlack text-xl">₹{order.totalprice}</p>
+                      <p className="text-warmgrey font-medium text-sm">{order.time}</p>
                     </div>
 
                     <button className="p-3 hover:bg-gold/10 rounded-xl transition-all duration-300 group-hover:scale-110">
@@ -518,7 +465,7 @@ function SellerDashboard() {
                   </div>
                 </div>
                 <p className="text-sm text-warmgrey font-medium mb-1">In Stock</p>
-                <p className="text-3xl font-bold text-CharcoalBlack">324</p>
+                <p className="text-3xl font-bold text-CharcoalBlack">{instock}</p>
               </div>
 
               <div className="bg-offwhite backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-1 hover:border-royalpurple/40 cursor-pointer relative overflow-hidden">
@@ -528,7 +475,7 @@ function SellerDashboard() {
                   </div>
                 </div>
                 <p className="text-sm text-warmgrey font-medium mb-1">Low Stock</p>
-                <p className="text-3xl font-bold text-CharcoalBlack">156</p>
+                <p className="text-3xl font-bold text-CharcoalBlack">{lowstock}</p>
               </div>
 
               <div className="bg-offwhite backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-1 hover:border-royalpurple/40 cursor-pointer relative overflow-hidden">
@@ -538,7 +485,7 @@ function SellerDashboard() {
                   </div>
                 </div>
                 <p className="text-sm text-warmgrey font-medium mb-1">Out of Stock</p>
-                <p className="text-3xl font-bold text-CharcoalBlack">767</p>
+                <p className="text-3xl font-bold text-CharcoalBlack">{outstock}</p>
               </div>
 
               <div className="bg-offwhite backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-1 hover:border-royalpurple/40 cursor-pointer relative overflow-hidden">
@@ -548,7 +495,7 @@ function SellerDashboard() {
                   </div>
                 </div>
                 <p className="text-sm text-warmgrey font-medium mb-1">Total Products </p>
-                <p className="text-3xl font-bold text-CharcoalBlack">1,247</p>
+                <p className="text-3xl font-bold text-CharcoalBlack">{totalproduct}</p>
               </div>
             </div>
 
@@ -566,33 +513,33 @@ function SellerDashboard() {
 
             {/* Products List */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {products.map((product, index) => (
+              {products.map((product) => (
                 <div
-                  key={index}
+                  key={product.productId}
                   className="bg-offwhite backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-1 group hover:border-royalpurple/20 cursor-pointer"
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="p-3 bg-blue-500 rounded-xl text-white group-hover:scale-110 transition-all duration-300">
                       <FiPackage className="text-xl" />
                     </div>
-                    <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${product.statusColor}`}>
-                      {product.status}
+                    <span className={`px-3 py-1.5 rounded-full text-sm font-semibold ${getProductStatusColor(product.totalstock).color}`}>
+                      {getProductStatusColor(product.totalstock).status}
                     </span>
                   </div>
 
-                  <h3 className="text-xl font-semibold text-CharcoalBlack mb-2 group-hover:text-royalpurple transition-colors">
+                  <h3 className="text-xl h-13 font-medium font-sans text-CharcoalBlack mb-4 group-hover:text-royalpurple transition-colors">
                     {product.name}
                   </h3>
-                  <p className="text-warmgrey mb-4">{product.category}</p>
+                  <p className="text-warmgrey mb-4">{product.procategory}</p>
 
                   <div className="flex items-center justify-between mb-6">
                     <div>
                       <p className="text-sm text-warmgrey mb-1">Price</p>
-                      <p className="text-2xl font-semibold text-CharcoalBlack">{product.price}</p>
+                      <p className="text-2xl font-semibold font-Playfair text-CharcoalBlack">₹{product.price}</p>
                     </div>
                     <div>
                       <p className="text-sm text-warmgrey mb-1">Stock</p>
-                      <p className="text-2xl font-bold text-CharcoalBlack">{product.stock}</p>
+                      <p className="text-2xl font-semibold font-Playfair text-CharcoalBlack">{product.totalstock}</p>
                     </div>
                   </div>
 
@@ -642,7 +589,7 @@ function SellerDashboard() {
                   </div>
                 </div>
                 <p className="text-sm text-warmgrey font-medium mb-1">Free</p>
-                <p className="text-3xl font-bold text-CharcoalBlack">324</p>
+                <p className="text-3xl font-bold text-CharcoalBlack">{free}</p>
               </div>
 
               <div className="bg-offwhite backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-1 hover:border-royalpurple/40 cursor-pointer relative overflow-hidden">
@@ -652,7 +599,7 @@ function SellerDashboard() {
                   </div>
                 </div>
                 <p className="text-sm text-warmgrey font-medium mb-1">On Delivery</p>
-                <p className="text-3xl font-bold text-CharcoalBlack">156</p>
+                <p className="text-3xl font-bold text-CharcoalBlack">{ondelivery}</p>
               </div>
 
               <div className="bg-offwhite backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-1 hover:border-royalpurple/40 cursor-pointer relative overflow-hidden">
@@ -662,12 +609,12 @@ function SellerDashboard() {
                   </div>
                 </div>
                 <p className="text-sm text-warmgrey font-medium mb-1">Total DeliveryBoys </p>
-                <p className="text-3xl font-bold text-CharcoalBlack">1,247</p>
+                <p className="text-3xl font-bold text-CharcoalBlack">{totaldeliveryboy}</p>
               </div>
             </div>
 
             {/* Search */}
-            <div className="bg-offwhite backdrop-blur-sm border border-gray-300 rounded-2xl p-6 shadow-lg hover:shadow-xl hover:border-royalpurple/30 transition-all duration-500 hover:-translate-y-1">
+            <div className="bg-offwhite backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl hover:border-royalpurple/30 transition-all duration-500 hover:-translate-y-1">
               <div className="relative">
                 <FiSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-warmgrey" />
                 <input
@@ -681,53 +628,52 @@ function SellerDashboard() {
             {/* delivery boy List */}
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-              {customers.map((customer, index) => (
+              {deliveyboys.map((boy) => (
                 <div
-                  key={index}
-                  className="bg-offwhite backdrop-blur-sm border border-gray-300 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-1 group hover:border-royalpurple/20 cursor-pointer"
+                  key={boy._id}
+                  className="bg-offwhite backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-500 hover:-translate-y-1 group hover:border-royalpurple/30 cursor-pointer"
                 >
                   <div className="flex items-start justify-between mb-6">
                     <div className="flex items-center gap-4">
                       <div className="w-16 h-16 bg-gold rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-all duration-300">
                         <span className="text-xl font-bold text-CharcoalBlack">
-                          {customer.name.split(' ').map(n => n[0]).join('')}
+                          {boy.profileImg ? <img
+                            src={boy.profileImg.url}
+                            className="w-16 h-16 rounded-full"
+                          /> : boy.name.split(' ').map(n => n[0]).join('')}
                         </span>
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-CharcoalBlack group-hover:text-royalpurple transition-colors">
-                          {customer.name}
+                        <h3 className="text-xl font-medium font-sans text-CharcoalBlack group-hover:text-royalpurple transition-colors">
+                          {boy.name}
                         </h3>
-                        <p className="text-warmgrey text-sm">{customer.id}</p>
+                        <p className="text-warmgrey text-sm">{boy.username}</p>
                       </div>
                     </div>
-                    <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${customer.statusColor}`}>
-                      {customer.status}
+                    <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${getBoyStatusColor(boy.is_ondelivery).color}`}>
+                      {getBoyStatusColor(boy.is_ondelivery).Status}
                     </span>
                   </div>
 
                   <div className="space-y-3 mb-6">
                     <div className="flex items-center gap-3 text-warmgrey">
                       <FiMail className="text-royalpurple" />
-                      <span className="text-sm">{customer.email}</span>
+                      <span className="text-sm">{boy.email}</span>
                     </div>
                     <div className="flex items-center gap-3 text-warmgrey">
                       <FiPhone className="text-royalpurple" />
-                      <span className="text-sm">{customer.phone}</span>
+                      <span className="text-sm">+91 {boy.phone}</span>
                     </div>
                     <div className="flex items-center gap-3 text-warmgrey">
-                      {/* <FiMapPin className="text-royalpurple" /> */}
-                      <span className="text-sm">{customer.location}</span>
+                      <FiTruck className="text-royalpurple" />
+                      <span className="text-sm">{boy.vehicle_type}</span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-6 border-t border-border">
                     <div>
-                      <p className="text-sm text-warmgrey mb-1">Orders</p>
-                      <p className="text-2xl font-bold text-CharcoalBlack">{customer.orders}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-warmgrey mb-1">Total Spent</p>
-                      <p className="text-2xl font-bold text-CharcoalBlack">{customer.spent}</p>
+                      <p className="text-sm text-warmgrey mb-1">Delivered Orders</p>
+                      <p className="text-2xl font-bold text-CharcoalBlack">{boy.orders}</p>
                     </div>
                     <button className="px-4 py-2 rounded-xl font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:scale-105 bg-offwhite/80 backdrop-blur-sm border border-gray-300 text-CharcoalBlack hover:border-gold/50">View Details</button>
                   </div>
@@ -767,7 +713,13 @@ function SellerDashboard() {
                     <label className="block text-sm font-medium text-CharcoalBlack mb-2">UserName</label>
                     <input
                       type="text"
-                      defaultValue="John Smith"
+                      Value={username}
+                      onChange={(e)=>{
+                        setHideButton(false)
+                        const newValue = e.target.value;
+                        setUsername(newValue.trim().slice(0,14))
+                        setHideButton(newValue == seller.username)
+                      }}
                       className="w-full px-4 py-3 bg-offwhite border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-royalpurple focus:border-royalpurple/50 transition-all"
                     />
                   </div>
@@ -775,7 +727,13 @@ function SellerDashboard() {
                     <label className="block text-sm font-medium text-CharcoalBlack mb-2">Name</label>
                     <input
                       type="text"
-                      defaultValue="John Smith"
+                      Value={name}
+                      onChange={(e)=>{
+                        setHideButton(false)
+                        const newValue = e.target.value;
+                        setName(newValue.trim().slice(0,15))
+                        setHideButton(newValue == seller.name)
+                      }}
                       className="w-full px-4 py-3 bg-offwhite border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-royalpurple focus:border-royalpurple/50 transition-all"
                     />
                   </div>
@@ -783,15 +741,28 @@ function SellerDashboard() {
                     <label className="block text-sm font-medium text-CharcoalBlack mb-2">Email</label>
                     <input
                       type="email"
-                      defaultValue="john.smith@email.com"
+                      Value={email}
+                      onChange={(e)=>{
+                        setHideButton(false)
+                        const newValue = e.target.value;
+                        setEmail(newValue.trim())
+                        setHideButton(newValue == seller.email)
+                      }}
                       className="w-full px-4 py-3 bg-offwhite border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-royalpurple focus:border-royalpurple/50 transition-all"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-CharcoalBlack mb-2">Phone</label>
+                    <label className="block text-sm font-medium text-CharcoalBlack mb-2">Phone(+91)</label>
                     <input
-                      type="tel"
-                      defaultValue="+1 (555) 123-4567"
+                      type="text"
+                      Value={phone}
+                      onChange={(e)=>{
+                        setHideButton(false)
+                        const onlyDigits = e.target.value.replace(/\D/g, '');
+                        const limitedDigits = onlyDigits.slice(0, 10).trim();
+                        setPhone(Number(limitedDigits));
+                        setHideButton( limitedDigits == seller.phone)
+                      }}
                       className="w-full px-4 py-3 bg-offwhite border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-royalpurple focus:border-royalpurple/50 transition-all"
                     />
                   </div>
@@ -799,52 +770,19 @@ function SellerDashboard() {
                     <label className="block text-sm font-medium text-CharcoalBlack mb-2">ShopName</label>
                     <input
                       type="text"
-                      defaultValue="John gresory"
+                      Value={shopname}
+                      onChange={(e)=>{
+                        setHideButton(false)
+                        const newValue = e.target.value;
+                        setShopname(newValue.trim().slice(0,20))
+                        setHideButton( newValue == seller.shopname)
+                      }}
                       className="w-full px-4 py-3 bg-offwhite border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-royalpurple focus:border-royalpurple/50 transition-all"
                     />
                   </div>
-                  <button className="px-4 py-2 rounded-xl font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:scale-105 bg-blue-600 text-white hover:shadow-glow transform hover:-translate-y-1 w-full">Save Changes</button>
-                </div>
-              </div>
-
-              {/* Security Settings */}
-              <div className="bg-offwhite backdrop-blur-sm border border-gray-200 rounded-2xl p-6 shadow-lg hover:shadow-xl hover:border-royalpurple/30 transition-all duration-500 hover:-translate-y-1">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="p-3 bg-gold rounded-xl">
-                    <FiLock className="text-CharcoalBlack text-2xl" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold text-CharcoalBlack">Security</h3>
-                    <p className="text-warmgrey">Manage password and authentication</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-CharcoalBlack mb-2">Current Password</label>
-                    <input
-                      type="password"
-                      placeholder="••••••••"
-                      className="w-full px-4 py-3 bg-offwhite border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-royalpurple focus:border-royalpurple/50 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font- medium text-CharcoalBlack mb-2">New Password</label>
-                    <input
-                      type="password"
-                      placeholder="••••••••"
-                      className="w-full px-4 py-3 bg-offwhite border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-royalpurple focus:border-royalpurple/50 transition-all"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-CharcoalBlack mb-2">Confirm Password</label>
-                    <input
-                      type="password"
-                      placeholder="••••••••"
-                      className="w-full px-4 py-3 bg-offwhite border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-royalpurple focus:border-royalpurple/50 transition-all"
-                    />
-                  </div>
-                  <button className="px-4 py-2 rounded-xl font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:scale-105 bg-blue-600 text-white hover:shadow-glow transform hover:-translate-y-1 w-full">Update Password</button>
+                  {!hidebutton && (
+                    <button className="px-4 py-2 rounded-xl font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:scale-105 bg-blue-600 text-white hover:shadow-glow transform hover:-translate-y-1 w-full" onClick={updateDetail}>Save Changes</button>
+                  )}
                 </div>
               </div>
 
@@ -945,8 +883,8 @@ function SellerDashboard() {
                   <FiShoppingBag className="text-CharcoalBlack text-xl lg:text-2xl" />
                 </div>
                 <div>
-                  <h1 className="text-xl lg:text-2xl font-sans font-medium text-white">Shopname</h1>
-                  <p className="text-white/70 text-xs font-sans lg:text-sm">John smith</p>
+                  <h1 className="text-[18px] text-pretty font-sans font-medium text-white">{shopname}</h1>
+                  <p className="text-white/70 text-xs font-sans lg:text-sm">{name}</p>
                 </div>
               </div>
             </div>
@@ -978,11 +916,11 @@ function SellerDashboard() {
             <div className="p-4 lg:p-6 border-t border-white/10">
               <div className={`flex items-center gap-3 lg:gap-4 p-3 lg:p-4 rounded-2xl backdrop-blur-sm hover:bg-white/20 transition-all duration-300 cursor-pointer ${activesection == 'profile' ? 'bg-gradient-to-r from-royalpurple/40 to-gold/30' : 'bg-white/10'}`} onClick={() => selectedoption('profile')}>
                 <div className="w-10 lg:w-12 h-10 lg:h-12 bg-gold rounded-full flex items-center justify-center shadow-lg">
-                  <span className="text-CharcoalBlack font-bold text-sm lg:text-lg">JS</span>
+                  <span className="text-CharcoalBlack font-bold text-sm lg:text-lg">{name.split(' ').map(n => n[0]).join('')}</span>
                 </div>
                 <div className="flex-1">
-                  <p className="text-white font-semibold text-sm lg:text-base">John Smith</p>
-                  <p className="text-white/70 text-xs lg:text-sm">Shopname</p>
+                  <p className="text-white font-medium text-pretty text-sm lg:text-base">{name}</p>
+                  <p className="text-white/70 text-xs lg:text-sm">{username}</p>
                 </div>
               </div>
             </div>
@@ -999,6 +937,7 @@ function SellerDashboard() {
           {renderContent()}
         </div>
       </div>
+      <Toaster position="top-center" reverseOrder={false} />
     </>
   )
 }
