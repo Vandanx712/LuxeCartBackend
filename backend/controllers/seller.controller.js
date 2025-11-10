@@ -667,3 +667,169 @@ export const deliveryboylist = asynchandller(async(req,res)=>{
         deliveryboys
     })
 })
+
+export const filterAllList = asynchandller(async (req, res) => {
+    const { item, status, status2, range, range2 } = req.body
+    const sellerId = req.user.id
+
+    if (!item) throw new ApiError(400, 'Plz give one item from Order,Product and Deliveryboy')
+
+    let filteredItem = []
+    let over1 = 0;
+    let exactRange = null;
+    let from1 = null
+    let to1 = null
+    let from = null
+    let to = null
+    let over2 = 0
+
+    if (range && range.includes('>')) {
+        over1 = parseInt(range.split('>')[1]);
+    }
+    else if (range && range !== 'all' && item !== 'Order') {
+        from1 = parseInt(range.split('<')[0]); to1 = parseInt(range.split('<')[1])
+    }
+    else if (range && range !== 'all' && item == 'Order') {
+        exactRange = parseInt(range);
+    }
+    
+    if (range2 && range2.includes('>')) {
+        over2 = parseInt(range2.split('>')[1])
+    }
+    else if (range2 && range2 !== 'all') {
+        from = parseInt(range2.split('<')[0]); 
+        to = parseInt(range2.split('<')[1])
+    }
+    
+    if (item == 'Order') {
+        const sellerorders = await Order.find({ seller: sellerId }).select('buyer seller items total_price order_status createdAt').sort({ createdAt: -1 })
+        const filteredorders = sellerorders.filter((order) => {
+            let statusmatch = status ? order.order_status == status : true;
+            let rangematch = true
+            let range2match = true
+            if (range && range !== 'all') {
+                if (over1) {
+                    rangematch = order.items.length > over1;
+                } else if (exactRange !== null) {
+                    rangematch = order.items.length === exactRange;
+                }
+            }
+            if (range2 && range2 !== 'all') {
+                if (over2) range2match = order.total_price > over2
+                else if (from !== null && to !== null) range2match = order.total_price >= from && order.total_price <= to;
+            }
+            return statusmatch && rangematch && range2match
+        })
+        filteredItem = await Promise.all(
+            filteredorders.map(async (order) => {
+                const buyername = await Buyer.findById(order.buyer).select('name')
+                const product = await Product.findById(order.items[0].product).select('name')
+                const productname = order.items.length > 1 ? product.name + ' & more' : product.name
+
+                let time = 'just Now'
+
+                const ordertime = new Date(order.createdAt)
+                const nowtime = new Date()
+                const diffMs = nowtime - ordertime
+                const diffSeconds = Math.floor(diffMs / 1000);
+                const diffMinutes = Math.floor(diffSeconds / 60);
+                const diffHours = Math.floor(diffMinutes / 60);
+                const diffDays = Math.floor(diffHours / 24);
+
+                if (diffMinutes > 0) time = `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`
+                if (diffHours > 0) time = `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`
+                if (diffDays > 0) time = `${diffDays} day${diffDays > 1 ? 's' : ''} ago`
+
+                return {
+                    orderid: order.id,
+                    seller: order.seller,
+                    buyer: buyername.name,
+                    products: productname,
+                    totalitem: order.items.length,
+                    totalprice: order.total_price,
+                    status: order.order_status,
+                    time
+                }
+            })
+        )
+    }
+    if (item == 'Product') {
+        const sellerProducts = await Product.find({ seller: sellerId }).select('seller _id name price discount category variants').sort({ createdAt: -1 })
+        const products = await Promise.all(
+            sellerProducts.map(async (product) => {
+                const category = await Category.findById(product.category).select('name')
+                let totalstock = 0
+                for (let variant of product.variants) {
+                    const vari = await ProductVariant.findById(variant).select('stock_count')
+                    totalstock += vari.stock_count
+                }
+                return {
+                    productId: product.id,
+                    seller: product.seller,
+                    name: product.name,
+                    price: product.price,
+                    discount: product.discount,
+                    procategory: category.name,
+                    categoryid: category.id,
+                    totalstock,
+                }
+            })
+        )
+        filteredItem = products.filter((product) => {
+            let statusmatch = true
+            let status2match = status2 ? product.categoryid == status2 : true
+            let rangematch = true
+            let range2match = true
+
+            if (status == 'instock') statusmatch = product.totalstock >= 5
+            if (status == 'lowstock') statusmatch = product.totalstock < 5
+            if (status == 'outofstock') statusmatch = product.totalstock == 0
+
+            if (range && range != 'all') {
+                if (over1) rangematch = product.discount > over1
+                else if (from1 !== null && to1 !== null) rangematch = product.discount >= from1 && product.discount <= to1
+            }
+
+            if (range2 && range2 !== 'all') {
+                if (over2) range2match = product.price > over2
+                else if (from !== null && to !== null) range2match = product.price >= from && product.price <= to
+            }
+
+            return statusmatch && status2match && rangematch && range2match
+        })
+    }
+    if (item == 'Deliveryboy') {
+        const Deliveryboys = await DeliveryBoy.find({ createBy: sellerId }).select('username _id name phone email vehicle_type is_ondelivery profileImg createBy').sort({ createdAt: -1 })
+        const deliveryboys = await Promise.all(
+            Deliveryboys.map(async (boy) => {
+                const orders = (await Order.find({ delivery_boy: boy.id, order_status: 'Delivered' }).select('id')).length
+                return {
+                    "_id": boy.id,
+                    "username": boy.username,
+                    "name": boy.name,
+                    "email": boy.email,
+                    "phone": boy.phone,
+                    "vehicle_type": boy.vehicle_type,
+                    "is_ondelivery": boy.is_ondelivery,
+                    "createBy": boy.createBy,
+                    orders
+                }
+            })
+        )
+        filteredItem = deliveryboys.filter((boy) => {
+            let statusmatch = status ? String(boy.is_ondelivery)== status : true
+            let status2match = status2 ? boy.vehicle_type == status2 : true
+            let rangematch = true
+
+            if (range && range !== 'all') {
+                if (over1) rangematch = boy.orders > over1
+                else if (from1 !== null && to1 !== null) rangematch = boy.orders >= from1 && boy.orders <= to1
+            }
+            return statusmatch && status2match && rangematch
+        })
+    }
+    return res.status(200).json({
+        message: 'List filtered successfully',
+        filteredItem
+    })
+})

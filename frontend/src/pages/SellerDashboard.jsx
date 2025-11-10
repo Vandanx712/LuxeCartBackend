@@ -62,6 +62,18 @@ function SellerDashboard() {
   const [shopname,setShopname] = useState('')
   const [hidebutton,setHideButton] = useState(true)
   const [seller,setSeller] = useState({})
+  const [isfilterOpen,setFilterOpen] = useState(false)
+  const [item,setItem] = useState('')
+
+  const [selectedStatuses, setSelectedStatuses] = useState('');
+  const [secSelectedStatus, setSecSeletedStatus] = useState('')
+  const [vehicle, setVehicle] = useState('')
+  const [deliveredOrder, setDeliveredOrder] = useState('all')
+  const [dateRange, setDateRange] = useState('all');
+  const [priceRange, setPriceRange] = useState('all');
+  const [statuses, setStatuses] = useState([])
+  const [categories, setCategories] = useState([])
+  const [discount, setDiscount] = useState('all')
 
 
   const sellerId = localStorage.getItem('id')
@@ -72,11 +84,15 @@ function SellerDashboard() {
   }
 
   useEffect(()=>{
-    loadOrderlist()
-    loadProductlist()
-    loadDeliveryboylist()
-    loadSellerDetail()
-  },[])
+    if(activesection=='Dashboard') {loadOrderlist(); loadSellerDetail()}
+    if(activesection=='Orders') loadOrderlist()
+    if(activesection=='Products') loadProductlist()
+    if(activesection=='Deliveryboys') loadDeliveryboylist()
+  },[activesection])
+  
+  useEffect(()=>{
+    handleStatuses()
+  },[item])
 
   const loadOrderlist = async()=>{
     try {
@@ -152,6 +168,122 @@ function SellerDashboard() {
       }
     }
   }
+
+  const handleStatuses =()=> {
+    if (item == 'Order') setStatuses(forOrder)
+    if (item == 'Product'){ setStatuses(forProduct); loadCategory() }
+    if (item == 'Deliveryboy')setStatuses(forboy);
+  }
+
+  const handleReset = () => {
+    setSelectedStatuses('');
+    setSecSeletedStatus('');
+    setVehicle('')
+    setDeliveredOrder('all')
+    setDiscount('all')
+    setDateRange('all');
+    setPriceRange('all');
+  };
+
+  const loadCategory = async() => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/product/allcategory`)
+      setCategories(response.data.categoies)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const handleFilter = async()=>{
+    try {
+      if(item=='Order'){
+        const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/seller/getfilteredlist`,{
+          item,
+          status:selectedStatuses,
+          range:dateRange,
+          range2:priceRange
+        },{withCredentials:true})
+        setorder(response.data.filteredItem)
+      }
+      if(item=='Product'){
+        const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/seller/getfilteredlist`,{
+          item,
+          status:selectedStatuses,
+          status2:secSelectedStatus,
+          range:discount,
+          range2:priceRange
+        },{withCredentials:true})
+        setProducts(response.data.filteredItem)
+      }
+      if(item=='Deliveryboy'){
+        const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/seller/getfilteredlist`,{
+          item,
+          status:selectedStatuses,
+          status2:vehicle,
+          range:deliveredOrder
+        },{withCredentials:true})
+        setDeliveryboy(response.data.filteredItem)
+      }
+        setFilterOpen(!isfilterOpen)
+        handleReset()
+    } catch (error) { 
+      console.error(error)
+    }
+  }
+
+  const forOrder = [
+    { id: 'Processing', label: 'Processing', color: 'bg-gold/10 text-gold' },
+    { id: 'shipped', label: 'Shipped', color: 'bg-royalpurple/20 text-royalpurple' },
+    { id: 'delivered', label: 'Delivered', color: 'bg-emeraldgreen/10 text-emeraldgreen' },
+  ];
+
+  const forProduct = [
+    { id: 'instock', label: 'In Stock', color: 'bg-emeraldgreen/10 text-emeraldgreen' },
+    { id: 'lowstock', label: 'Low Stock', color: 'bg-gold/10 text-gold' },
+    { id: 'outofstock', label: 'Out of Stock', color: 'bg-red-200 text-red-500' }
+  ]
+
+  const DiscountforProduct = [
+    { id: 'all', label: 'All Discount' },
+    { id: '0<15', label: 'Under 15%' },
+    { id: '15<30', label: '15% - 30%' },
+    { id: '>30', label: 'Over 30%' },
+  ]
+
+  const forboy = [
+    { id: 'true', label: 'On Delivery', color: 'bg-gold/10 text-gold' },
+    { id: 'false', label: 'Free', color: 'bg-emeraldgreen/10 text-emeraldgreen' }
+  ]
+
+  const vehicleforboy = [
+    { id: 'bike', label: 'Bike' },
+    { id: 'tempo', label: 'Tempo' },
+    { id: 'van', label: 'Van' },
+    { id: 'truck', label: 'Truck' }
+  ]
+
+  const deliveredorder = [
+    { id: 'all', label: 'All Orders' },
+    { id: '0<5', label: 'Under 5' },
+    { id: '5<10', label: '5 - 10' },
+    { id: '10<20', label: '10 - 20' },
+    { id: '>20', label: 'Over 20' },
+  ];
+
+  const itemRanges = [
+    { id: 'all', label: 'All Items' },
+    { id: '1', label: '1' },
+    { id: '2', label: '2' },
+    { id: '>2', label: 'Over 2' }
+  ];
+
+  const priceRanges = [
+    { id: 'all', label: 'All Prices' },
+    { id: '0<500', label: 'Under ₹500' },
+    { id: '500<1000', label: '₹500 - ₹1000' },
+    { id: '1000<2000', label: '₹1000 - ₹2000' },
+    { id: '>2000', label: 'Over ₹2000' },
+  ];
 
   // Metrics data
   const metrics = [
@@ -333,7 +465,7 @@ function SellerDashboard() {
                   <p className="text-lg opacity-90">View and manage all your orders</p>
                 </div>
                 <div className="flex gap-3">
-                  <button className="px-4 py-2 rounded-xl font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:scale-105 bg-gradient-to-l from-sky-200 to-sky-200 text-CharcoalBlack hover:shadow-glow transform hover:-translate-y-1 flex items-center gap-2">
+                  <button onClick={()=>{setFilterOpen(!isfilterOpen);setItem('Order')}} className="px-4 py-2 rounded-xl font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:scale-105 bg-gradient-to-l from-sky-200 to-sky-200 text-CharcoalBlack hover:shadow-glow transform hover:-translate-y-1 flex items-center gap-2">
                     <FiFilter />
                     Filter
                   </button>
@@ -444,7 +576,7 @@ function SellerDashboard() {
                   <p className="text-lg opacity-90">Manage your product inventory</p>
                 </div>
                 <div className="flex gap-3">
-                  <button className="px-4 py-2 rounded-xl font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:scale-105 bg-gradient-to-l from-sky-200 to-sky-200 text-CharcoalBlack hover:shadow-glow transform hover:-translate-y-1 flex items-center gap-2">
+                  <button onClick={()=>{setFilterOpen(!isfilterOpen);setItem('Product')}} className="px-4 py-2 rounded-xl font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:scale-105 bg-gradient-to-l from-sky-200 to-sky-200 text-CharcoalBlack hover:shadow-glow transform hover:-translate-y-1 flex items-center gap-2">
                     <FiFilter />
                     Filter
                   </button>
@@ -452,7 +584,7 @@ function SellerDashboard() {
                     <FiPlus />
                     Add Product
                   </button>
-                </div>
+                </div>  
               </div>
             </div>
 
@@ -538,6 +670,10 @@ function SellerDashboard() {
                       <p className="text-2xl font-semibold font-Playfair text-CharcoalBlack">₹{product.price}</p>
                     </div>
                     <div>
+                      <p className="text-sm text-warmgrey mb-1">Discount</p>
+                      <p className="text-2xl font-semibold font-Playfair text-CharcoalBlack">{product.discount}%</p>
+                    </div>
+                    <div>
                       <p className="text-sm text-warmgrey mb-1">Stock</p>
                       <p className="text-2xl font-semibold font-Playfair text-CharcoalBlack">{product.totalstock}</p>
                     </div>
@@ -568,7 +704,7 @@ function SellerDashboard() {
                   <p className="text-lg opacity-90">View and manage your deliveryboy base</p>
                 </div>
                 <div className="flex gap-3">
-                  <button className="px-4 py-2 rounded-xl font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:scale-105 bg-gradient-to-l from-sky-200 to-sky-200 text-CharcoalBlack hover:shadow-glow transform hover:-translate-y-1 flex items-center gap-2">
+                  <button onClick={()=>{setFilterOpen(!isfilterOpen);setItem('Deliveryboy')}} className="px-4 py-2 rounded-xl font-medium transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 hover:scale-105 bg-gradient-to-l from-sky-200 to-sky-200 text-CharcoalBlack hover:shadow-glow transform hover:-translate-y-1 flex items-center gap-2">
                     <FiFilter />
                     Filter
                   </button>
@@ -938,6 +1074,248 @@ function SellerDashboard() {
         </div>
       </div>
       <Toaster position="top-center" reverseOrder={false} />
+      
+      {isfilterOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/10 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setFilterOpen(!isfilterOpen);
+          }}
+        >
+          <div className="w-full max-w-[500px] bg-offwhite border border-gray-200 rounded-2xl shadow-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="p-4 sm:p-6 border-b border-gray-300">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                <h2 className="text-xl sm:text-2xl font-medium font-sans text-CharcoalBlack">Filter {item}s</h2>
+                <div className="flex items-center gap-5">
+                  <button
+                    onClick={handleReset}
+                    className="text-sm font-normal text-warmgrey hover:text-royalpurple transition-colors"
+                  >
+                    Reset All
+                  </button>
+                  <button
+                    onClick={()=>setFilterOpen(!isfilterOpen)}
+                    className="text-warmgrey hover:text-CharcoalBlack transition-colors"
+                  >
+                    <FiX size={24} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="overflow-y-auto p-4 sm:p-6 space-y-6">
+              {/* Status For all */}
+              <div className="space-y-3">
+                <label className="text-base font-sans text-CharcoalBlack block">Status</label>
+                <div className="space-y-2">
+                  {statuses.map((status) => (
+                    <div
+                      key={status.id}
+                      className={`flex items-center space-x-3 p-3 rounded-xl ${status.id == selectedStatuses ? 'bg-black/5' : ''} hover:bg-black/5 transition-colors cursor-pointer`}
+                      onClick={() => setSelectedStatuses(status.id)}
+                    >
+                      <div className="relative w-5 h-5 flex items-center justify-center">
+                        <input
+                          type="checkbox"
+                          id={status.id}
+                          checked={selectedStatuses.includes(status.id)}
+                          onChange={() => setSelectedStatuses(status.id)}
+                          className="peer w-5 h-5 rounded border-2 border-gray-200 appearance-none checked:bg-royalpurple checked:border-royalpurple cursor-pointer transition-all"
+                        />
+                        <FiCheck
+                          className="absolute w-3 h-3 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity"
+                        />
+                      </div>
+                      <label
+                        htmlFor={status.id}
+                        className="flex-1 cursor-pointer flex items-center gap-2"
+                      >
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${status.color}`}>
+                          {status.label}
+                        </span>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Other conent  */}
+              {item == 'Order' && (<div className="space-y-3">
+                <label className="text-base font-sans text-CharcoalBlack block">Total Items</label>
+                <div className="grid grid-cols-1 xs:grid-cols-2 gap-2">
+                  {itemRanges.map((range) => (
+                    <button
+                      key={range.id}
+                      onClick={() => setDateRange(range.id)}
+                      className={`p-3 rounded-xl text-sm font-medium transition-all duration-300 ${dateRange === range.id
+                        ? 'bg-blue-600 text-white shadow-lg'
+                        : 'bg-gray-100 text-warmgrey hover:bg-white hover:text-CharcoalBlack'
+                        }`}
+                    >
+                      {dateRange === range.id && <FiCheck className="inline mr-2" />}
+                      {range.label}
+                    </button>
+                  ))}
+                </div>
+              </div>)}
+
+              {item == 'Product' && (<div className="space-y-3">
+                <label className="text-base font-sans text-CharcoalBlack block">Categories</label>
+                <div className="space-y-2">
+                  {categories.map((status) => (
+                    <div
+                      key={status._id}
+                      className={`flex items-center space-x-3 p-3 rounded-xl ${status._id == secSelectedStatus ? 'bg-black/5' : ''} hover:bg-black/5 transition-colors cursor-pointer`}
+                      onClick={() => setSecSeletedStatus(status._id)}
+                    >
+                      <div className="relative w-5 h-5 flex items-center justify-center">
+                        <input
+                          type="checkbox"
+                          id={status._id}
+                          checked={secSelectedStatus.includes(status._id)}
+                          onChange={() => setSecSeletedStatus(status._id)}
+                          className="peer w-5 h-5 rounded border-2 border-gray-200 appearance-none checked:bg-royalpurple checked:border-royalpurple cursor-pointer transition-all"
+                        />
+                        <FiCheck
+                          className="absolute w-3 h-3 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity"
+                        />
+                      </div>
+                      <label
+                        htmlFor={status._id}
+                        className="flex-1 cursor-pointer flex items-center gap-2"
+                      >
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${status._id == secSelectedStatus ? 'text-royalpurple' : 'text-CharcoalBlack'}`}>
+                          {status.name}
+                        </span>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </div>)}
+
+              {item == 'Product' && (
+                <div className="space-y-3">
+                  <label className="text-base font-sans text-CharcoalBlack block">Discount Range</label>
+                  <div className="grid grid-cols-1 xs:grid-cols-2 gap-2">
+                    {DiscountforProduct.map((range) => (
+                      <button
+                        key={range.id}
+                        onClick={() => setDiscount(range.id)}
+                        className={`p-3 rounded-xl text-sm font-medium transition-all duration-300 ${discount === range.id
+                          ? 'bg-blue-600 text-white shadow-lg'
+                          : 'bg-gray-100 text-warmgrey hover:bg-white hover:text-CharcoalBlack'
+                          }`}
+                      >
+                        {discount === range.id && <FiCheck className="inline mr-2" />}
+                        {range.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Price Range */}
+              {item != 'Deliveryboy' && (<div className="space-y-3">
+                <label className="text-base font-sans text-CharcoalBlack block">Price Range</label>
+                <div className="grid grid-cols-1 xs:grid-cols-2 gap-2">
+                  {priceRanges.map((range) => (
+                    <button
+                      key={range.id}
+                      onClick={() => setPriceRange(range.id)}
+                      className={`p-3 rounded-xl text-sm font-medium transition-all duration-300 ${priceRange === range.id
+                        ? 'bg-blue-600 text-white shadow-lg'
+                        : 'bg-gray-100 text-warmgrey hover:bg-white hover:text-CharcoalBlack'
+                        }`}
+                    >
+                      {priceRange === range.id && <FiCheck className="inline mr-2" />}
+                      {range.label}
+                    </button>
+                  ))}
+                </div>
+              </div>)}
+
+              {item == 'Deliveryboy' && (
+                <div className="space-y-3">
+                  <label className="text-base font-sans text-CharcoalBlack block">Vehicle Type</label>
+                  <div className="space-y-2">
+                    {vehicleforboy.map((status) => (
+                      <div
+                        key={status.id}
+                        className={`flex items-center space-x-3 p-3 rounded-xl ${status.id == vehicle ? 'bg-black/5' : ''} hover:bg-black/5 transition-colors cursor-pointer`}
+                        onClick={() => setVehicle(status.id)}
+                      >
+                        <div className="relative w-5 h-5 flex items-center justify-center">
+                          <input
+                            type="checkbox"
+                            id={status.id}
+                            checked={vehicle.includes(status.id)}
+                            onChange={() => setVehicle(status.id)}
+                            className="peer w-5 h-5 rounded border-2 border-gray-200 appearance-none checked:bg-royalpurple checked:border-royalpurple cursor-pointer transition-all"
+                          />
+                          <FiCheck
+                            className="absolute w-3 h-3 text-white pointer-events-none opacity-0 peer-checked:opacity-100 transition-opacity"
+                          />
+                        </div>
+                        <label
+                          htmlFor={status.id}
+                          className="flex-1 cursor-pointer flex items-center gap-2"
+                        >
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${status.id == vehicle ? 'text-royalpurple' : 'text-CharcoalBlack'}`}>
+                            {status.label}
+                          </span>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {item == 'Deliveryboy' && (
+                <div className="space-y-3">
+                  <label className="text-base font-sans text-CharcoalBlack block">Delivered Orders Range</label>
+                  <div className="grid grid-cols-1 xs:grid-cols-2 gap-2">
+                    {deliveredorder.map((range) => (
+                      <button
+                        key={range.id}
+                        onClick={() => setDeliveredOrder(range.id)}
+                        className={`p-3 rounded-xl text-sm font-medium transition-all duration-300 ${deliveredOrder === range.id
+                          ? 'bg-blue-600 text-white shadow-lg'
+                          : 'bg-gray-100 text-warmgrey hover:bg-white hover:text-CharcoalBlack'
+                          }`}
+                      >
+                        {deliveredOrder === range.id && <FiCheck className="inline mr-2" />}
+                        {range.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer Actions */}
+            <div className="p-4 sm:p-6 border-t border-gray-300">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={handleReset}
+                  className="flex-1 px-4 py-3 rounded-xl border border-gray-200 bg-white text-CharcoalBlack hover:bg-surface-hover transition-colors flex items-center justify-center gap-2 font-medium"
+                >
+                  <FiX />
+                  Clear
+                </button>
+                <button
+                  onClick={handleFilter}
+                  className="flex-1 px-4 py-3 rounded-xl bg-blue-500 text-white hover:opacity-90 transition-opacity flex items-center justify-center gap-2 font-medium shadow-lg"
+                >
+                  <FiCheck />
+                  Apply Filters
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

@@ -98,7 +98,6 @@ function Product() {
       qty: quantity,
       img: productImages[0]
     }
-    console.log(item)
     try {
       await axios.put(`${import.meta.env.VITE_BACKEND_URL}/api/buyer/addoncart`,{
         productId: _id,
